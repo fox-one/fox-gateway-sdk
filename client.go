@@ -14,20 +14,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type Client struct {
-	apiBase string
-
-	client *http.Client
-}
-
-func NewClient(apiBase string) *Client {
-	c := &Client{
-		apiBase: apiBase,
-	}
-
-	c.client = &http.Client{}
-
-	tr := &http.Transport{
+var defaultHttpClient = &http.Client{
+	Transport: &http.Transport{
 		Dial: func(network, addr string) (net.Conn, error) {
 			dialer := net.Dialer{
 				Timeout:   30 * time.Second,
@@ -35,10 +23,20 @@ func NewClient(apiBase string) *Client {
 			}
 			return dialer.Dial(network, addr)
 		},
-	}
-	c.client.Transport = tr
+	},
+}
 
-	return c
+type Client struct {
+	apiBase string
+
+	client *http.Client
+}
+
+func NewClient(apiBase string) *Client {
+	return &Client{
+		apiBase: apiBase,
+		client:  defaultHttpClient,
+	}
 }
 
 type Authenticator interface {
