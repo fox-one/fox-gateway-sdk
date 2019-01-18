@@ -103,3 +103,30 @@ func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Durat
 
 	return resp.Member, resp.Session, nil
 }
+
+// ClearUserSessions clear user session
+func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessionKey ...string) error {
+	req := m.POST("/merchant/logout").P("id", memberID)
+	if len(sessionKey) > 0 {
+		req = req.P("session_key", sessionKey[0])
+	}
+	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	var resp struct {
+		Err
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return err
+	}
+
+	if resp.Code > 0 {
+		return resp.Err
+	}
+
+	return nil
+}
