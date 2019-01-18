@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -111,7 +112,6 @@ func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessi
 		req = req.P("session_key", sessionKey[0])
 	}
 	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx)
-
 	if err != nil {
 		return err
 	}
@@ -129,4 +129,30 @@ func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessi
 	}
 
 	return nil
+}
+
+// GetTradingUserCount get trading stats
+func (m *Merchant) GetTradingUserCount(ctx context.Context, merchant string, from, to time.Time) (int, int, error) {
+	uri := fmt.Sprintf("/report/users?from=%s&to=%s&merchant=%s", from.Format(time.RFC3339Nano), to.Format(time.RFC3339Nano), merchant)
+	data, err := m.GET(uri).Auth(m.Presign(time.Minute)).Do(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	var resp struct {
+		Err
+
+		Total  int `json:"total"`
+		Actual int `json:"actual"`
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return 0, 0, err
+	}
+
+	if resp.Code > 0 {
+		return 0, 0, resp.Err
+	}
+
+	return resp.Total, resp.Actual, nil
 }
