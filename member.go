@@ -16,8 +16,8 @@ type Member struct {
 	secret string
 }
 
-func NewMember(key, secret, apiBase string) *Merchant {
-	return &Merchant{
+func NewMember(key, secret, apiBase string) *Member {
+	return &Member{
 		key:    key,
 		secret: secret,
 		Client: NewClient(apiBase),
