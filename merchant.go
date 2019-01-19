@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -54,7 +53,7 @@ func (m *Merchant) Presign(expire time.Duration) Authenticator {
 }
 
 func (m *Merchant) CreateMember(ctx context.Context) (*MemberView, *MemberSessionView, error) {
-	data, err := m.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx)
+	data, err := m.POST("/merchant/member/new").Auth(m.Presign(time.Minute)).Do(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +77,7 @@ func (m *Merchant) CreateMember(ctx context.Context) (*MemberView, *MemberSessio
 }
 
 func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {
-	data, err := m.POST("/member/login").
+	data, err := m.POST("/merchant/member/login").
 		P("id", id).
 		P("expire", int64(expire.Seconds())).
 		Auth(m.Presign(time.Minute)).
@@ -107,7 +106,7 @@ func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Durat
 
 // ClearUserSessions clear user session
 func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessionKey ...string) error {
-	req := m.POST("/merchant/logout").P("id", memberID)
+	req := m.POST("/merchant/member/logout").P("id", memberID)
 	if len(sessionKey) > 0 {
 		req = req.P("session_key", sessionKey[0])
 	}
@@ -133,8 +132,11 @@ func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessi
 
 // GetTradingUserCount get trading stats
 func (m *Merchant) GetTradingUserCount(ctx context.Context, merchant string, from, to time.Time) (int, int, error) {
-	uri := fmt.Sprintf("/report/users?from=%s&to=%s&merchant=%s", from.Format(time.RFC3339Nano), to.Format(time.RFC3339Nano), merchant)
-	data, err := m.GET(uri).Auth(m.Presign(time.Minute)).Do(ctx)
+	req := m.GET("/merchant/report/users").
+		P("from", from.Format(time.RFC3339Nano)).
+		P("to", to.Format(time.RFC3339Nano)).
+		P("merchant", merchant)
+	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx)
 	if err != nil {
 		return 0, 0, err
 	}
