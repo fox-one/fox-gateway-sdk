@@ -133,7 +133,7 @@ func (r *Request) Do(ctx context.Context) ([]byte, error) {
 			value := fmt.Sprint(v)
 			query.Add(k, value)
 		}
-		u.RawPath = query.Encode()
+		u.RawQuery = query.Encode()
 	}
 
 	if r.auth != nil {

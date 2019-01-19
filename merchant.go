@@ -129,32 +129,3 @@ func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessi
 
 	return nil
 }
-
-// GetTradingUserCount get trading stats
-func (m *Merchant) GetTradingUserCount(ctx context.Context, merchant string, from, to time.Time) (int, int, error) {
-	req := m.GET("/merchant/report/users").
-		P("from", from.Format(time.RFC3339Nano)).
-		P("to", to.Format(time.RFC3339Nano)).
-		P("merchant", merchant)
-	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	var resp struct {
-		Err
-
-		Total  int `json:"total"`
-		Actual int `json:"actual"`
-	}
-
-	if err := jsoniter.Unmarshal(data, &resp); err != nil {
-		return 0, 0, err
-	}
-
-	if resp.Code > 0 {
-		return 0, 0, resp.Err
-	}
-
-	return resp.Total, resp.Actual, nil
-}
