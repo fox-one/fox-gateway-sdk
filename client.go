@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -13,18 +12,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
 )
-
-var defaultHttpClient = &http.Client{
-	Transport: &http.Transport{
-		Dial: func(network, addr string) (net.Conn, error) {
-			dialer := net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}
-			return dialer.Dial(network, addr)
-		},
-	},
-}
 
 type Client struct {
 	apiBase string
@@ -35,7 +22,7 @@ type Client struct {
 func NewClient(apiBase string) *Client {
 	return &Client{
 		apiBase: apiBase,
-		client:  defaultHttpClient,
+		client:  http.DefaultClient,
 	}
 }
 
