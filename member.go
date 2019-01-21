@@ -101,3 +101,29 @@ func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
 
 	return resp.Member, nil
 }
+
+func (m *Member) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
+	data, err := m.POST("/member/validate").
+		P("method", method).
+		P("uri", uri).
+		P("body", body).
+		P("token", token).
+		Do(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	var resp struct {
+		Err
+		MemberID string `json:"member_id"`
+	}
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return "", err
+	}
+
+	if resp.Code > 0 {
+		return "", resp.Err
+	}
+
+	return resp.MemberID, nil
+}
