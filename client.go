@@ -16,8 +16,9 @@ import (
 )
 
 type Client struct {
-	host string
-	path string
+	scheme string
+	host   string
+	path   string
 
 	client *http.Client
 }
@@ -37,6 +38,7 @@ func NewClient(apiBase string) *Client {
 	}
 
 	return &Client{
+		scheme: u.Scheme,
 		host:   u.Host,
 		path:   u.Path,
 		client: http.DefaultClient,
@@ -155,7 +157,7 @@ func (r *Request) Do(ctx context.Context) ([]byte, error) {
 		r.H("Authorization", "Bearer "+token)
 	}
 
-	u.Scheme = "https"
+	u.Scheme = r.c.scheme
 	u.Host = r.c.host
 
 	request, err := http.NewRequest(r.method, u.String(), bytes.NewBuffer(body))
