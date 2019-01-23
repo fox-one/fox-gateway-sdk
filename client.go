@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -106,8 +107,10 @@ func (r *Request) WithTokenString(token string) *Request {
 }
 
 func (r *Request) Do(ctx context.Context) ([]byte, error) {
-	u := &url.URL{}
-	u.Path = r.uri
+	u, err := url.Parse(path.Join(r.c.apiBase, r.uri))
+	if err != nil {
+		return nil, err
+	}
 
 	var body []byte
 
