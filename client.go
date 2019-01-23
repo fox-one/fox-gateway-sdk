@@ -15,6 +15,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const (
+	timestampKey = "_ts"
+	nonceKey     = "_nonce"
+)
+
 type Client struct {
 	scheme string
 	host   string
@@ -57,6 +62,10 @@ type Authenticator interface {
 	GenerateToken(method, uri string, body []byte) string
 }
 
+type AuthenticatorParams interface {
+	AuthParams() map[string]interface{}
+}
+
 type Request struct {
 	c *Client
 
@@ -75,8 +84,8 @@ func (c *Client) req(method, uri string) *Request {
 		uri:     uri,
 		headers: http.Header{},
 		params: map[string]interface{}{
-			"_ts":    time.Now().Unix(),
-			"_nonce": uuid.Must(uuid.NewV4()).String(),
+			timestampKey: time.Now().Unix(),
+			nonceKey:     uuid.Must(uuid.NewV4()).String(),
 		},
 	}
 }
@@ -113,7 +122,7 @@ func (r *Request) P(key string, value interface{}) *Request {
 }
 
 func (r *Request) Nonce(nonce string) *Request {
-	r.params["_nonce"] = nonce
+	r.params[nonceKey] = nonce
 	return r
 }
 
@@ -136,6 +145,12 @@ func (r *Request) Do(ctx context.Context) ([]byte, error) {
 	u, err := url.Parse(path.Join(r.c.path, r.uri))
 	if err != nil {
 		return nil, err
+	}
+
+	if authParams, ok := r.auth.(AuthenticatorParams); ok {
+		for k, v := range authParams.AuthParams() {
+			r.P(k, v)
+		}
 	}
 
 	var body []byte

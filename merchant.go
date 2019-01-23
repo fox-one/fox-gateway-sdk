@@ -20,7 +20,7 @@ func NewMerchant(key, secret, apiBase string) *Merchant {
 	return &Merchant{
 		key:    key,
 		secret: secret,
-		Client: NewClient(apiBase),
+		Client: NewClient(apiBase + "/merchant"),
 	}
 }
 
@@ -28,15 +28,22 @@ func NewMerchant(key, secret, apiBase string) *Merchant {
 
 type merchantAuth struct {
 	*Merchant
-	expire time.Duration
+	memberID string
+	expire   time.Duration
 }
 
 func (m *merchantAuth) GenerateToken(method, uri string, body []byte) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	claims := jwt.MapClaims{
 		"exp":  time.Now().Add(m.expire).Unix(),
 		"sign": signRequest(method, uri, body),
 		"key":  m.key,
-	})
+	}
+
+	if len(m.memberID) > 0 {
+		claims["mem"] = m.memberID
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte(m.secret))
 	if err != nil {
 		log.Panicln("sign merchent token", err)
@@ -45,15 +52,20 @@ func (m *merchantAuth) GenerateToken(method, uri string, body []byte) string {
 	return t
 }
 
-func (m *Merchant) Presign(expire time.Duration) Authenticator {
+func (m *Merchant) PresignMember(memberID string, expire time.Duration) Authenticator {
 	return &merchantAuth{
 		Merchant: m,
 		expire:   expire,
+		memberID: memberID,
 	}
 }
 
+func (m *Merchant) Presign(expire time.Duration) Authenticator {
+	return m.PresignMember("", expire)
+}
+
 func (m *Merchant) CreateMember(ctx context.Context) (*MemberView, *MemberSessionView, error) {
-	data, err := m.POST("/merchant/member/new").Auth(m.Presign(time.Minute)).Do(ctx)
+	data, err := m.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -77,7 +89,7 @@ func (m *Merchant) CreateMember(ctx context.Context) (*MemberView, *MemberSessio
 }
 
 func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {
-	data, err := m.POST("/merchant/member/login").
+	data, err := m.POST("/member/login").
 		P("id", id).
 		P("expire", int64(expire.Seconds())).
 		Auth(m.Presign(time.Minute)).
@@ -106,7 +118,7 @@ func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Durat
 
 // ClearUserSessions clear user session
 func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessionKey ...string) error {
-	req := m.POST("/merchant/member/logout").P("id", memberID)
+	req := m.POST("/member/logout").P("id", memberID)
 	if len(sessionKey) > 0 {
 		req = req.P("session_key", sessionKey[0])
 	}

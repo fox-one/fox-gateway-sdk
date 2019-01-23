@@ -7,6 +7,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	jsoniter "github.com/json-iterator/go"
+	uuid "github.com/satori/go.uuid"
 )
 
 type Member struct {
@@ -20,7 +21,7 @@ func NewMember(key, secret, apiBase string) *Member {
 	return &Member{
 		key:    key,
 		secret: secret,
-		Client: NewClient(apiBase),
+		Client: NewClient(apiBase + "/member"),
 	}
 }
 
@@ -68,21 +69,31 @@ func (m *memberAuth) GenerateToken(method, uri string, body []byte) string {
 	return t
 }
 
-func (m *Member) PresignWithPin(pin, nonce string, expire time.Duration) Authenticator {
+func (m *memberAuth) AuthParams() map[string]interface{} {
+	if len(m.pin) > 0 {
+		return map[string]interface{}{
+			nonceKey: m.nonce,
+		}
+	}
+
+	return nil
+}
+
+func (m *Member) PresignWithPin(pin string, expire time.Duration) Authenticator {
 	return &memberAuth{
 		Member: m,
 		pin:    pin,
-		nonce:  nonce,
+		nonce:  uuid.Must(uuid.NewV4()).String(),
 		expire: expire,
 	}
 }
 
 func (m *Member) Presign(expire time.Duration) Authenticator {
-	return m.PresignWithPin("", "", expire)
+	return &memberAuth{Member: m, expire: expire}
 }
 
 func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
-	data, err := m.GET("/member/info").Auth(m.Presign(time.Minute)).Do(ctx)
+	data, err := m.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +114,7 @@ func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
 }
 
 func (m *Member) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
-	data, err := m.POST("/member/validate").
+	data, err := m.POST("/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).
