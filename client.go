@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -15,15 +16,38 @@ import (
 )
 
 type Client struct {
-	apiBase string
+	host string
+	path string
 
 	client *http.Client
 }
 
+func parseAPIBase(apiBase string) (*url.URL, error) {
+	if !strings.HasPrefix(apiBase, "http") {
+		apiBase = "https://" + apiBase
+	}
+
+	return url.Parse(apiBase)
+}
+
 func NewClient(apiBase string) *Client {
+	u, err := parseAPIBase(apiBase)
+	if err != nil {
+		panic(err)
+	}
+
 	return &Client{
-		apiBase: apiBase,
-		client:  http.DefaultClient,
+		host:   u.Host,
+		path:   u.Path,
+		client: http.DefaultClient,
+	}
+}
+
+func (c *Client) Group(uri string) *Client {
+	return &Client{
+		host:   c.host,
+		path:   path.Join(c.path, uri),
+		client: c.client,
 	}
 }
 
@@ -107,7 +131,7 @@ func (r *Request) WithTokenString(token string) *Request {
 }
 
 func (r *Request) Do(ctx context.Context) ([]byte, error) {
-	u, err := url.Parse(path.Join(r.c.apiBase, r.uri))
+	u, err := url.Parse(path.Join(r.c.path, r.uri))
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +156,7 @@ func (r *Request) Do(ctx context.Context) ([]byte, error) {
 	}
 
 	u.Scheme = "https"
-	u.Host = r.c.apiBase
+	u.Host = r.c.host
 
 	request, err := http.NewRequest(r.method, u.String(), bytes.NewBuffer(body))
 	if err != nil {
