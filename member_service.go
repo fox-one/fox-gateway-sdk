@@ -3,6 +3,8 @@ package gateway
 import (
 	"context"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 type MemberService struct {
@@ -47,7 +49,7 @@ func (m *MemberService) Presign(expire time.Duration) Authenticator {
 type WalletUserAssetsView []*WalletUserAssetView
 
 func (m *MemberService) ReadAssets(ctx context.Context) (WalletUserAssetsView, error) {
-	_, err := m.GET("/assets").Auth(m.Presign(time.Minute)).Do(ctx)
+	data, err := m.GET("/assets").Auth(m.Presign(time.Minute)).Do(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +57,14 @@ func (m *MemberService) ReadAssets(ctx context.Context) (WalletUserAssetsView, e
 	var resp struct {
 		Err
 		WalletUserAssetsView
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Err
 	}
 
 	return resp.WalletUserAssetsView, nil
