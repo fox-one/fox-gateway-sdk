@@ -9,10 +9,8 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"time"
 
 	jsoniter "github.com/json-iterator/go"
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -26,6 +24,8 @@ type Client struct {
 	path   string
 
 	client *http.Client
+
+	newRequestHandler func(req *Request)
 }
 
 func parseAPIBase(apiBase string) (*url.URL, error) {
@@ -36,7 +36,7 @@ func parseAPIBase(apiBase string) (*url.URL, error) {
 	return url.Parse(apiBase)
 }
 
-func NewClient(apiBase string) *Client {
+func NewClient(apiBase string, paths ...string) *Client {
 	u, err := parseAPIBase(apiBase)
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func NewClient(apiBase string) *Client {
 	return &Client{
 		scheme: u.Scheme,
 		host:   u.Host,
-		path:   u.Path,
+		path:   path.Join(paths...),
 		client: http.DefaultClient,
 	}
 }
@@ -56,6 +56,10 @@ func (c *Client) Group(uri string) *Client {
 		path:   path.Join(c.path, uri),
 		client: c.client,
 	}
+}
+
+func (c *Client) HandleNewRequest(fn func(*Request)) {
+	c.newRequestHandler = fn
 }
 
 type Authenticator interface {
@@ -83,10 +87,6 @@ func (c *Client) req(method, uri string) *Request {
 		method:  method,
 		uri:     uri,
 		headers: http.Header{},
-		params: map[string]interface{}{
-			timestampKey: time.Now().Unix(),
-			nonceKey:     uuid.Must(uuid.NewV4()).String(),
-		},
 	}
 }
 
@@ -175,7 +175,7 @@ func (r *Request) Do(ctx context.Context) ([]byte, error) {
 	u.Scheme = r.c.scheme
 	u.Host = r.c.host
 
-	request, err := http.NewRequest(r.method, u.String(), bytes.NewBuffer(body))
+	request, err := http.NewRequest(r.method, u.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

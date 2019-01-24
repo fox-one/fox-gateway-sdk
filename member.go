@@ -11,18 +11,21 @@ import (
 )
 
 type Member struct {
-	*Client
-
+	client *Client
 	key    string
 	secret string
 }
 
-func NewMember(key, secret, apiBase string) *Member {
+func (c *Client) Member(key, secret string) *Member {
 	return &Member{
 		key:    key,
 		secret: secret,
-		Client: NewClient(apiBase + "/member"),
+		client: c.Group("member"),
 	}
+}
+
+func NewMember(key, secret, apiBase string) *Member {
+	return NewClient(apiBase).Member(key, secret)
 }
 
 // auth
@@ -93,7 +96,7 @@ func (m *Member) Presign(expire time.Duration) Authenticator {
 }
 
 func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
-	data, err := m.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx)
+	data, err := m.client.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +117,7 @@ func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
 }
 
 func (m *Member) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
-	data, err := m.POST("/validate").
+	data, err := m.client.POST("/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).

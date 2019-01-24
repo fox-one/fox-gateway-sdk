@@ -8,19 +8,19 @@ import (
 
 // Admin admin
 type Admin struct {
-	*Client
+	client *Client
 }
 
 // NewAdmin new admin
 func NewAdmin(apiBase string) *Admin {
 	return &Admin{
-		Client: NewClient(apiBase),
+		client: NewClient(apiBase, "admin"),
 	}
 }
 
 // Validate validate
 func (a *Admin) Validate(ctx context.Context, method, uri, body, token string) (*AdminUserView, error) {
-	data, err := a.POST("/admin/validate").
+	data, err := a.client.POST("/admin/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).
