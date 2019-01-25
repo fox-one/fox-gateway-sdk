@@ -6,42 +6,48 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/fox-one/httpclient"
 	jsoniter "github.com/json-iterator/go"
-	uuid "github.com/satori/go.uuid"
 )
 
-type Member struct {
+type MemberClient struct {
 	client *Client
 	key    string
 	secret string
 }
 
-func (c *Client) Member(key, secret string) *Member {
-	return &Member{
+func (c *Client) Member(key, secret string) *MemberClient {
+	return &MemberClient{
 		key:    key,
 		secret: secret,
 		client: c.Group("member"),
 	}
 }
 
-func NewMember(key, secret, apiBase string) *Member {
+func NewMemberClient(key, secret, apiBase string) *MemberClient {
 	return NewClient(apiBase).Member(key, secret)
 }
 
 // auth
 
 type memberAuth struct {
-	*Member
+	*MemberClient
 
 	pin    string
 	nonce  string
 	expire time.Duration
 }
 
-func (m *memberAuth) GenerateToken(method, uri string, body []byte) string {
+func (m *memberAuth) PrepareAuth(req *httpclient.Request) {
+	if m.nonce != "" {
+		req.P(nonceKey, m.nonce)
+	}
+}
+
+func (m *memberAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
 	claims := jwt.MapClaims{
 		"exp":  time.Now().Add(m.expire).Unix(),
-		"sign": signRequest(method, uri, body),
+		"sign": signRequest(method, uri, string(body)),
 		"key":  m.key,
 	}
 
@@ -69,34 +75,24 @@ func (m *memberAuth) GenerateToken(method, uri string, body []byte) string {
 		log.Panicln("sign merchent token", err)
 	}
 
-	return t
+	req.AddToken(t)
 }
 
-func (m *memberAuth) AuthParams() map[string]interface{} {
-	if len(m.pin) > 0 {
-		return map[string]interface{}{
-			nonceKey: m.nonce,
-		}
-	}
-
-	return nil
-}
-
-func (m *Member) PresignWithPin(pin string, expire time.Duration) Authenticator {
+func (m *MemberClient) PresignWithPin(pin, nonce string, expire time.Duration) httpclient.Authenticator {
 	return &memberAuth{
-		Member: m,
-		pin:    pin,
-		nonce:  uuid.Must(uuid.NewV4()).String(),
-		expire: expire,
+		MemberClient: m,
+		pin:          pin,
+		nonce:        nonce,
+		expire:       expire,
 	}
 }
 
-func (m *Member) Presign(expire time.Duration) Authenticator {
-	return &memberAuth{Member: m, expire: expire}
+func (m *MemberClient) Presign(expire time.Duration) httpclient.Authenticator {
+	return &memberAuth{MemberClient: m, expire: expire}
 }
 
-func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
-	data, err := m.client.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx)
+func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {
+	data, err := m.client.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return nil, err
 	}
@@ -116,13 +112,13 @@ func (m *Member) MemberInfo(ctx context.Context) (*MemberView, error) {
 	return resp.Member, nil
 }
 
-func (m *Member) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
+func (m *MemberClient) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
 	data, err := m.client.POST("/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).
 		P("token", token).
-		Do(ctx)
+		Do(ctx).Bytes()
 	if err != nil {
 		return "", err
 	}

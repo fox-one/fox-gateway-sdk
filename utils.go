@@ -7,12 +7,18 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/base64"
+
+	uuid "github.com/satori/go.uuid"
 )
 
-func signRequest(method, uri string, body []byte) string {
+func signRequest(method, uri, body string) string {
 	h := sha256.New()
-	h.Write(append([]byte(method+uri), body...))
+	h.Write([]byte(method + uri + body))
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
+func newNonce() string {
+	return uuid.Must(uuid.NewV4()).String()
 }
 
 func MD5(str string) []byte {

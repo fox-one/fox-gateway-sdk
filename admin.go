@@ -7,25 +7,29 @@ import (
 )
 
 // Admin admin
-type Admin struct {
+type AdminClient struct {
 	client *Client
 }
 
 // NewAdmin new admin
-func NewAdmin(apiBase string) *Admin {
-	return &Admin{
-		client: NewClient(apiBase, "admin"),
+func NewAdminClient(apiBase string) *AdminClient {
+	return NewClient(apiBase).Admin()
+}
+
+func (c *Client) Admin() *AdminClient {
+	return &AdminClient{
+		client: c.Group("admin"),
 	}
 }
 
 // Validate validate
-func (a *Admin) Validate(ctx context.Context, method, uri, body, token string) (*AdminUserView, error) {
+func (a *AdminClient) Validate(ctx context.Context, method, uri, body, token string) (*AdminUserView, error) {
 	data, err := a.client.POST("/admin/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).
 		P("token", token).
-		Do(ctx)
+		Do(ctx).Bytes()
 	if err != nil {
 		return nil, err
 	}

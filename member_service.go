@@ -2,40 +2,42 @@ package gateway
 
 import (
 	"time"
+
+	"github.com/fox-one/httpclient"
 )
 
 type MemberService struct {
 	client   *Client
-	authFunc func(expire time.Duration) Authenticator
+	authFunc func(expire time.Duration) httpclient.Authenticator
 }
 
-func (m *Member) Service(name string) *MemberService {
+func (m *MemberClient) Service(name string) *MemberService {
 	return &MemberService{
 		client: m.client.Group(name),
-		authFunc: func(expire time.Duration) Authenticator {
+		authFunc: func(expire time.Duration) httpclient.Authenticator {
 			return m.Presign(expire)
 		},
 	}
 }
 
-func (m *Member) ServiceWithPin(name, pin string) *MemberService {
+func (m *MemberClient) ServiceWithPin(name, pin string) *MemberService {
 	return &MemberService{
 		client: m.client.Group(name),
-		authFunc: func(expire time.Duration) Authenticator {
-			return m.PresignWithPin(pin, expire)
+		authFunc: func(expire time.Duration) httpclient.Authenticator {
+			return m.PresignWithPin(pin, newNonce(), expire)
 		},
 	}
 }
 
-func (m *Merchant) MemberService(name, member string) *MemberService {
+func (m *MerchantClient) MemberService(name, member string) *MemberService {
 	return &MemberService{
 		client: m.client.Group(name),
-		authFunc: func(expire time.Duration) Authenticator {
+		authFunc: func(expire time.Duration) httpclient.Authenticator {
 			return m.PresignMember(member, expire)
 		},
 	}
 }
 
-func (m *MemberService) Presign(expire time.Duration) Authenticator {
+func (m *MemberService) Presign(expire time.Duration) httpclient.Authenticator {
 	return m.authFunc(expire)
 }

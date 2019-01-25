@@ -6,39 +6,39 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/fox-one/httpclient"
 	jsoniter "github.com/json-iterator/go"
 )
 
-type Merchant struct {
+type MerchantClient struct {
 	client *Client
 	key    string
 	secret string
 }
 
-func (c *Client) Merchant(key, secret string) *Merchant {
-	return &Merchant{
+func (c *Client) Merchant(key, secret string) *MerchantClient {
+	return &MerchantClient{
 		key:    key,
 		secret: secret,
 		client: c.Group("merchant"),
 	}
 }
 
-func NewMerchant(key, secret, apiBase string) *Merchant {
+func NewMerchantClient(key, secret, apiBase string) *MerchantClient {
 	return NewClient(apiBase).Merchant(key, secret)
 }
 
 // auth
-
 type merchantAuth struct {
-	*Merchant
+	*MerchantClient
 	memberID string
 	expire   time.Duration
 }
 
-func (m *merchantAuth) GenerateToken(method, uri string, body []byte) string {
+func (m *merchantAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
 	claims := jwt.MapClaims{
 		"exp":  time.Now().Add(m.expire).Unix(),
-		"sign": signRequest(method, uri, body),
+		"sign": signRequest(method, uri, string(body)),
 		"key":  m.key,
 	}
 
@@ -52,23 +52,25 @@ func (m *merchantAuth) GenerateToken(method, uri string, body []byte) string {
 		log.Panicln("sign merchent token", err)
 	}
 
-	return t
+	req.AddToken(t)
 }
 
-func (m *Merchant) PresignMember(memberID string, expire time.Duration) Authenticator {
+func (m *MerchantClient) PresignMember(memberID string, expire time.Duration) httpclient.Authenticator {
 	return &merchantAuth{
-		Merchant: m,
-		expire:   expire,
-		memberID: memberID,
+		MerchantClient: m,
+		expire:         expire,
+		memberID:       memberID,
 	}
 }
 
-func (m *Merchant) Presign(expire time.Duration) Authenticator {
+func (m *MerchantClient) Presign(expire time.Duration) httpclient.Authenticator {
 	return m.PresignMember("", expire)
 }
 
-func (m *Merchant) CreateMember(ctx context.Context) (*MemberView, *MemberSessionView, error) {
-	data, err := m.client.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx)
+// member
+
+func (m *MerchantClient) CreateMember(ctx context.Context) (*MemberView, *MemberSessionView, error) {
+	data, err := m.client.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -91,12 +93,12 @@ func (m *Merchant) CreateMember(ctx context.Context) (*MemberView, *MemberSessio
 	return resp.Member, resp.Session, nil
 }
 
-func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {
+func (m *MerchantClient) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {
 	data, err := m.client.POST("/member/login").
 		P("id", id).
 		P("expire", int64(expire.Seconds())).
 		Auth(m.Presign(time.Minute)).
-		Do(ctx)
+		Do(ctx).Bytes()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -120,12 +122,12 @@ func (m *Merchant) LoginMember(ctx context.Context, id string, expire time.Durat
 }
 
 // ClearUserSessions clear user session
-func (m *Merchant) ClearUserSessions(ctx context.Context, memberID string, sessionKey ...string) error {
+func (m *MerchantClient) ClearUserSessions(ctx context.Context, memberID string, sessionKey ...string) error {
 	req := m.client.POST("/member/logout").P("id", memberID)
 	if len(sessionKey) > 0 {
 		req = req.P("session_key", sessionKey[0])
 	}
-	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx)
+	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return err
 	}
