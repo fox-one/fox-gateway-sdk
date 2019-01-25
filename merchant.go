@@ -11,14 +11,14 @@ import (
 )
 
 type MerchantClient struct {
-	client *Client
+	*Client
 	key    string
 	secret string
 }
 
 func (c *Client) Merchant() *MerchantClient {
 	return &MerchantClient{
-		client: c.Group("merchant"),
+		Client: c.Group("merchant"),
 	}
 }
 
@@ -28,7 +28,7 @@ func NewMerchantClient(apiBase string) *MerchantClient {
 
 func (c *MerchantClient) WithSession(key, secret string) *MerchantClient {
 	return &MerchantClient{
-		client: c.client,
+		Client: c.Client,
 		key:    key,
 		secret: secret,
 	}
@@ -88,7 +88,7 @@ func (m *MerchantClient) SignMember(memberID, method, uri string, body []byte, e
 // member
 
 func (m *MerchantClient) CreateMember(ctx context.Context) (*MemberView, *MemberSessionView, error) {
-	data, err := m.client.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
+	data, err := m.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,7 +112,7 @@ func (m *MerchantClient) CreateMember(ctx context.Context) (*MemberView, *Member
 }
 
 func (m *MerchantClient) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {
-	data, err := m.client.POST("/member/login").
+	data, err := m.POST("/member/login").
 		P("id", id).
 		P("expire", int64(expire.Seconds())).
 		Auth(m.Presign(time.Minute)).
@@ -141,7 +141,7 @@ func (m *MerchantClient) LoginMember(ctx context.Context, id string, expire time
 
 // ClearUserSessions clear user session
 func (m *MerchantClient) ClearUserSessions(ctx context.Context, memberID string, sessionKey ...string) error {
-	req := m.client.POST("/member/logout").P("id", memberID)
+	req := m.POST("/member/logout").P("id", memberID)
 	if len(sessionKey) > 0 {
 		req = req.P("session_key", sessionKey[0])
 	}

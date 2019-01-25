@@ -7,13 +7,13 @@ import (
 )
 
 type MemberService struct {
-	client   *Client
+	*Client
 	authFunc func(expire time.Duration) httpclient.Authenticator
 }
 
 func (m *MemberClient) Service(name string) *MemberService {
 	return &MemberService{
-		client: m.client.Group(name),
+		Client: m.Client.Group(name),
 		authFunc: func(expire time.Duration) httpclient.Authenticator {
 			return m.Presign(expire)
 		},
@@ -22,7 +22,7 @@ func (m *MemberClient) Service(name string) *MemberService {
 
 func (m *MemberClient) ServiceWithPin(name, pin string) *MemberService {
 	return &MemberService{
-		client: m.client.Group(name),
+		Client: m.Group(name),
 		authFunc: func(expire time.Duration) httpclient.Authenticator {
 			return m.PresignWithPin(pin, expire)
 		},
@@ -31,7 +31,7 @@ func (m *MemberClient) ServiceWithPin(name, pin string) *MemberService {
 
 func (m *MerchantClient) MemberService(name, member string) *MemberService {
 	return &MemberService{
-		client: m.client.Group(name),
+		Client: m.Group("/member/" + name),
 		authFunc: func(expire time.Duration) httpclient.Authenticator {
 			return m.PresignMember(member, expire)
 		},

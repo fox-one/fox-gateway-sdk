@@ -11,7 +11,7 @@ import (
 )
 
 type MemberClient struct {
-	client *Client
+	*Client
 
 	key    string
 	secret string
@@ -19,7 +19,7 @@ type MemberClient struct {
 
 func (c *Client) Member() *MemberClient {
 	return &MemberClient{
-		client: c.Group("member"),
+		Client: c.Group("member"),
 	}
 }
 
@@ -29,7 +29,7 @@ func NewMemberClient(apiBase string) *MemberClient {
 
 func (c *MemberClient) WithSession(key, secret string) *MemberClient {
 	return &MemberClient{
-		client: c.client,
+		Client: c.Client,
 		key:    key,
 		secret: secret,
 	}
@@ -111,7 +111,7 @@ func (m *MemberClient) SignWithPin(pin, method, uri string, body []byte, expire 
 }
 
 func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {
-	data, err := m.client.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
+	data, err := m.GET("/info").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {
 }
 
 func (m *MemberClient) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
-	data, err := m.client.POST("/validate").
+	data, err := m.POST("/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).
