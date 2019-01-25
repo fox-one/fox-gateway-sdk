@@ -8,7 +8,7 @@ import (
 
 // Admin admin
 type AdminClient struct {
-	*Client
+	client *Client
 }
 
 // NewAdmin new admin

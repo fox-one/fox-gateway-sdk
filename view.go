@@ -58,3 +58,35 @@ type WalletUserAssetView struct {
 	Asset             *WalletAssetView       `json:"asset,omitempty"`
 	Address           *WalletUserAddressView `json:"address,omitempty"`
 }
+
+// Exchange
+
+type ExchangeAssetView struct {
+	Symbol    string `json:"symbol,omitempty"`
+	AssetID   string `json:"asset_id,omitempty"`
+	Name      string `json:"name,omitempty"`
+	ChainID   string `json:"chain_id,omitempty"`
+	Icon      string `json:"icon_url,omitempty"`
+	Type      string `json:"type,omitempty"`
+	Precision int    `json:"precision,omitempty"`
+}
+
+type ExchangePairView struct {
+	Symbol           string `json:"symbol,omitempty"`
+	Logo             string `json:"logo,omitempty"`
+	BaseAssetId      string `json:"base_asset_id,omitempty"`
+	BaseAssetSymbol  string `json:"base_asset,omitempty"`
+	QuoteAssetId     string `json:"quote_asset_id,omitempty"`
+	QuoteAssetSymbol string `json:"quote_asset,omitempty"`
+	PricePrecision   int    `json:"price_precision,omitempty"`
+	AmountPrecision  int    `json:"amount_precision,omitempty"`
+	Status           string `json:"status,omitempty"`
+	BaseMinAmount    string `json:"base_min_amount,omitempty"`
+	BaseMaxAmount    string `json:"base_max_amount,omitempty"`
+	QuoteMinAmount   string `json:"quote_min_amount,omitempty"`
+	QuoteMaxAmount   string `json:"quote_max_amount,omitempty"`
+}
+
+func (v *ExchangePairView) Market() string {
+	return v.BaseAssetId + "-" + v.QuoteAssetId
+}

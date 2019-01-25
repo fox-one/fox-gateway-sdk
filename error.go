@@ -2,6 +2,8 @@ package gateway
 
 import (
 	"fmt"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 type Err struct {
@@ -21,4 +23,9 @@ func (e Err) String() string {
 	}
 
 	return err
+}
+
+func decodeErr(data []byte) (e Err) {
+	jsoniter.Unmarshal(data, &e)
+	return
 }

@@ -11,7 +11,7 @@ import (
 )
 
 type MemberClient struct {
-	*Client
+	client *Client
 
 	key    string
 	secret string
@@ -21,7 +21,7 @@ func (c *Client) Member(key, secret string) *MemberClient {
 	return &MemberClient{
 		key:    key,
 		secret: secret,
-		Client: c.Group("member"),
+		client: c.Group("member"),
 	}
 }
 
@@ -45,7 +45,7 @@ func (m *memberAuth) PrepareAuth(req *httpclient.Request) {
 	}
 }
 
-func (m *memberAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
+func (m *memberAuth) token(method, uri string, body []byte) string {
 	claims := jwt.MapClaims{
 		"exp":  time.Now().Add(m.expire).Unix(),
 		"sign": signRequest(method, uri, string(body)),
@@ -76,20 +76,32 @@ func (m *memberAuth) Auth(req *httpclient.Request, method, uri string, body []by
 		log.Panicln("sign merchent token", err)
 	}
 
-	req.AddToken(t)
+	return t
 }
 
-func (m *MemberClient) PresignWithPin(pin, nonce string, expire time.Duration) httpclient.Authenticator {
+func (m *memberAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
+	req.AddToken(m.token(method, uri, body))
+}
+
+func (m *MemberClient) PresignWithPin(pin string, expire time.Duration) *memberAuth {
 	return &memberAuth{
 		MemberClient: m,
 		pin:          pin,
-		nonce:        nonce,
+		nonce:        newNonce(),
 		expire:       expire,
 	}
 }
 
-func (m *MemberClient) Presign(expire time.Duration) httpclient.Authenticator {
+func (m *MemberClient) Presign(expire time.Duration) *memberAuth {
 	return &memberAuth{MemberClient: m, expire: expire}
+}
+
+func (m *MemberClient) Sign(method, uri string, body []byte, expire time.Duration) string {
+	return m.Presign(expire).token(method, uri, body)
+}
+
+func (m *MemberClient) SignWithPin(pin, method, uri string, body []byte, expire time.Duration) string {
+	return m.PresignWithPin(pin, expire).token(method, uri, body)
 }
 
 func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {

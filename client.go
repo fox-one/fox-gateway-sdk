@@ -13,11 +13,11 @@ const (
 )
 
 type Client struct {
-	client *httpclient.Client
+	*httpclient.Client
 }
 
 func (c *Client) Group(group string) *Client {
-	return &Client{c.client.Group(group)}
+	return &Client{c.Client.Group(group)}
 }
 
 func NewClient(apiBase string) *Client {

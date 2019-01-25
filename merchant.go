@@ -11,7 +11,7 @@ import (
 )
 
 type MerchantClient struct {
-	*Client
+	client *Client
 	key    string
 	secret string
 }
@@ -20,7 +20,7 @@ func (c *Client) Merchant(key, secret string) *MerchantClient {
 	return &MerchantClient{
 		key:    key,
 		secret: secret,
-		Client: c.Group("merchant"),
+		client: c.Group("merchant"),
 	}
 }
 
@@ -35,7 +35,7 @@ type merchantAuth struct {
 	expire   time.Duration
 }
 
-func (m *merchantAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
+func (m *merchantAuth) token(method, uri string, body []byte) string {
 	claims := jwt.MapClaims{
 		"exp":  time.Now().Add(m.expire).Unix(),
 		"sign": signRequest(method, uri, string(body)),
@@ -52,10 +52,14 @@ func (m *merchantAuth) Auth(req *httpclient.Request, method, uri string, body []
 		log.Panicln("sign merchent token", err)
 	}
 
-	req.AddToken(t)
+	return t
 }
 
-func (m *MerchantClient) PresignMember(memberID string, expire time.Duration) httpclient.Authenticator {
+func (m *merchantAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
+	req.AddToken(m.token(method, uri, body))
+}
+
+func (m *MerchantClient) PresignMember(memberID string, expire time.Duration) *merchantAuth {
 	return &merchantAuth{
 		MerchantClient: m,
 		expire:         expire,
@@ -63,8 +67,16 @@ func (m *MerchantClient) PresignMember(memberID string, expire time.Duration) ht
 	}
 }
 
-func (m *MerchantClient) Presign(expire time.Duration) httpclient.Authenticator {
+func (m *MerchantClient) Presign(expire time.Duration) *merchantAuth {
 	return m.PresignMember("", expire)
+}
+
+func (m *MerchantClient) Sign(method, uri string, body []byte, expire time.Duration) string {
+	return m.Presign(expire).token(method, uri, body)
+}
+
+func (m *MerchantClient) SignMember(memberID, method, uri string, body []byte, expire time.Duration) string {
+	return m.PresignMember(memberID, expire).token(method, uri, body)
 }
 
 // member
