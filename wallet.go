@@ -84,7 +84,9 @@ func (walletList WalletList) Error() string {
 
 // GetAssets 取用户的资产
 func (memberService *MemberService) GetAssets(ctx context.Context) (AssetList, error) {
-	resp, err := memberService.GET("/assets").Auth(memberService.Presign(time.Minute)).Do(ctx).Bytes()
+	resp, err := memberService.GET("/assets").
+		Auth(memberService.Presign(time.Minute)).
+		Do(ctx).Bytes()
 
 	if err != nil {
 		log.Error(err)
@@ -105,7 +107,10 @@ func (memberService *MemberService) GetAssets(ctx context.Context) (AssetList, e
 
 // GetAssetsByID 读取用户某币种余额
 func (memberService *MemberService) GetAssetsByID(ctx context.Context, assetID string) (AssetList, error) {
-	resp, err := memberService.GET("/assets").P("asset_id", assetID).Auth(memberService.Presign(time.Minute)).Do(ctx).Bytes()
+	resp, err := memberService.GET("/assets").
+		P("asset_id", assetID).
+		Auth(memberService.Presign(time.Minute)).
+		Do(ctx).Bytes()
 
 	if err != nil {
 		log.Error(err)
@@ -127,7 +132,13 @@ func (memberService *MemberService) GetAssetsByID(ctx context.Context, assetID s
 // GetSnapshots 读取转账记录列表
 func (memberService *MemberService) GetSnapshots(ctx context.Context, assetID string,
 	cursor string, limit int, order string) (SnapshotList, error) {
-	resp, err := memberService.GET("/snapshots").P("asset_id", assetID).P("cursor", cursor).P("limit", limit).P("order", order).Auth(memberService.Presign(time.Minute)).Do(ctx).Bytes()
+	resp, err := memberService.GET("/snapshots").
+		P("asset_id", assetID).
+		P("cursor", cursor).
+		P("limit", limit).
+		P("order", order).
+		Auth(memberService.Presign(time.Minute)).
+		Do(ctx).Bytes()
 
 	if err != nil {
 		log.Error(err)
@@ -147,8 +158,11 @@ func (memberService *MemberService) GetSnapshots(ctx context.Context, assetID st
 }
 
 // Withdraw 提现
-func (memberService *MemberService) Withdraw(ctx context.Context) (Snapshot, error) {
-	resp, err := memberService.POST("/withdraw").Auth(memberService.Presign(time.Minute)).Do(ctx).Bytes()
+func (memberService *MemberService) Withdraw(ctx context.Context, body string) (Snapshot, error) {
+	resp, err := memberService.POST("/withdraw").
+		P("body", body).
+		Auth(memberService.Presign(time.Minute)).
+		Do(ctx).Bytes()
 
 	if err != nil {
 		log.Error(err)
@@ -168,8 +182,11 @@ func (memberService *MemberService) Withdraw(ctx context.Context) (Snapshot, err
 }
 
 // Transfer 转账
-func (memberService *MemberService) Transfer(ctx context.Context) (Snapshot, error) {
-	resp, err := memberService.POST("/transfer").Auth(memberService.Presign(time.Minute)).Do(ctx).Bytes()
+func (memberService *MemberService) Transfer(ctx context.Context, body string) (Snapshot, error) {
+	resp, err := memberService.POST("/transfer").
+		P("body", body).
+		Auth(memberService.Presign(time.Minute)).
+		Do(ctx).Bytes()
 
 	if err != nil {
 		log.Error(err)
