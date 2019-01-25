@@ -17,16 +17,22 @@ type MemberClient struct {
 	secret string
 }
 
-func (c *Client) Member(key, secret string) *MemberClient {
+func (c *Client) Member() *MemberClient {
 	return &MemberClient{
-		key:    key,
-		secret: secret,
 		client: c.Group("member"),
 	}
 }
 
-func NewMemberClient(key, secret, apiBase string) *MemberClient {
-	return NewClient(apiBase).Member(key, secret)
+func NewMemberClient(apiBase string) *MemberClient {
+	return NewClient(apiBase).Member()
+}
+
+func (c *MemberClient) WithSession(key, secret string) *MemberClient {
+	return &MemberClient{
+		client: c.client,
+		key:    key,
+		secret: secret,
+	}
 }
 
 // auth

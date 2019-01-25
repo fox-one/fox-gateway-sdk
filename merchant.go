@@ -16,16 +16,22 @@ type MerchantClient struct {
 	secret string
 }
 
-func (c *Client) Merchant(key, secret string) *MerchantClient {
+func (c *Client) Merchant() *MerchantClient {
 	return &MerchantClient{
-		key:    key,
-		secret: secret,
 		client: c.Group("merchant"),
 	}
 }
 
-func NewMerchantClient(key, secret, apiBase string) *MerchantClient {
-	return NewClient(apiBase).Merchant(key, secret)
+func NewMerchantClient(apiBase string) *MerchantClient {
+	return NewClient(apiBase).Merchant()
+}
+
+func (c *MerchantClient) WithSession(key, secret string) *MerchantClient {
+	return &MerchantClient{
+		client: c.client,
+		key:    key,
+		secret: secret,
+	}
 }
 
 // auth

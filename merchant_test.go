@@ -17,7 +17,7 @@ const (
 
 func TestMerchantCreateMember(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	c := NewMerchantClient(merchantKey, merchantSecret, apiBase)
+	c := NewMerchantClient(apiBase).WithSession(merchantKey, merchantSecret)
 
 	ctx := context.Background()
 	m, s, err := c.CreateMember(ctx)

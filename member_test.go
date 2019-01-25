@@ -16,7 +16,7 @@ const (
 func TestMemberAuth(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
 	ctx := context.Background()
-	c := NewClient(apiBase).Member(memberKey, memberSecret)
+	c := NewClient(apiBase).Member().WithSession(memberKey, memberSecret)
 	m, err := c.MemberInfo(ctx)
 	if assert.Nil(t, err) {
 		assert.NotEmpty(t, m.ID)
