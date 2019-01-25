@@ -8,7 +8,7 @@ import (
 
 // Admin admin
 type AdminClient struct {
-	client *Client
+	*Client
 }
 
 // NewAdmin new admin
@@ -17,9 +17,7 @@ func NewAdminClient(apiBase string) *AdminClient {
 }
 
 func (c *Client) Admin() *AdminClient {
-	return &AdminClient{
-		client: c.Group("admin"),
-	}
+	return &AdminClient{c.Group("admin")}
 }
 
 // Validate validate

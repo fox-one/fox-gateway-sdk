@@ -11,7 +11,7 @@ import (
 )
 
 type MerchantClient struct {
-	client *Client
+	*Client
 	key    string
 	secret string
 }
@@ -20,7 +20,7 @@ func (c *Client) Merchant(key, secret string) *MerchantClient {
 	return &MerchantClient{
 		key:    key,
 		secret: secret,
-		client: c.Group("merchant"),
+		Client: c.Group("merchant"),
 	}
 }
 

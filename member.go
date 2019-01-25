@@ -11,7 +11,8 @@ import (
 )
 
 type MemberClient struct {
-	client *Client
+	*Client
+
 	key    string
 	secret string
 }
@@ -20,7 +21,7 @@ func (c *Client) Member(key, secret string) *MemberClient {
 	return &MemberClient{
 		key:    key,
 		secret: secret,
-		client: c.Group("member"),
+		Client: c.Group("member"),
 	}
 }
 
