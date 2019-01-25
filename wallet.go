@@ -22,6 +22,14 @@ func (asset Asset) Error() string {
 	return asset.AssetID
 }
 
+// AssetList xx
+type AssetList []Asset
+
+// Implements the error interface
+func (assetList AssetList) Error() string {
+	return "asset"
+}
+
 // Wallet Model
 type Wallet struct {
 	Label    string `json:"label"`
