@@ -39,3 +39,13 @@ func TestMerchantCreateMember(t *testing.T) {
 		assert.True(t, s.ExpiredAt > s.CreatedAt)
 	}
 }
+
+func TestMerchantService(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
+	c := NewMerchantClient(apiBase).WithSession(merchantKey, merchantSecret)
+
+	ctx := context.Background()
+	data, err := c.GET("/member/services").P("member_id", "73a563c6c3884b1fb88bf0093dbd04a3").Auth(c.Presign(time.Minute)).Do(ctx).Bytes()
+	assert.Nil(t, err)
+	assert.NotEmpty(t, string(data))
+}
