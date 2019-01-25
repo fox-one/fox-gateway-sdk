@@ -17,12 +17,22 @@ type Asset struct {
 	IconURL string `json:"icon_url"`
 }
 
+// Implements the error interface
+func (asset Asset) Error() string {
+	return asset.AssetID
+}
+
 // Wallet Model
 type Wallet struct {
 	Label    string `json:"label"`
 	MemberID string `json:"member_id"`
 	Service  string `json:"service"`
 	WalletID string `json:"wallet_id"`
+}
+
+// Implements the error interface
+func (wallet Wallet) Error() string {
+	return wallet.Label
 }
 
 // GetAssets 取用户的资产
