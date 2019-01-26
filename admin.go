@@ -22,7 +22,7 @@ func (c *Client) Admin() *AdminClient {
 
 // Validate validate
 func (a *AdminClient) Validate(ctx context.Context, method, uri, body, token string) (*AdminUserView, error) {
-	data, err := a.client.POST("/admin/validate").
+	data, err := a.client.POST("/validate").
 		P("method", method).
 		P("uri", uri).
 		P("body", body).
