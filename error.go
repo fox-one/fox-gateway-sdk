@@ -13,6 +13,10 @@ type Err struct {
 }
 
 func (e Err) Error() string {
+	if e.Hint != "" {
+		return fmt.Sprintf("%s (%s)", e.Msg, e.Hint)
+	}
+
 	return e.Msg
 }
 
