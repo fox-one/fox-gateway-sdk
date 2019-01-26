@@ -68,7 +68,7 @@ func (c *AdminClient) Presign(expire time.Duration) *adminAuth {
 }
 
 // Validate validate
-func (a *AdminClient) Validate(ctx context.Context, token, method, uri string, body []byte) (*AdminUserView, error) {
+func (a *AdminClient) Validate(ctx context.Context, method, uri, body, token string) (*AdminUserView, error) {
 	data, err := a.client.POST("/validate").
 		P("method", method).
 		P("uri", uri).
