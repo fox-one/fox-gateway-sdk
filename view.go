@@ -23,6 +23,13 @@ type AdminUserView struct {
 	Merchant  string `json:"merchant"`
 }
 
+type AdminSessionView struct {
+	Key       string `json:"key"`
+	Secret    string `json:"secret"`
+	CreatedAt int64  `json:"created_at"`
+	ExpiredAt int64  `json:"expired_at"`
+}
+
 // wallet
 
 // Asset asset

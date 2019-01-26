@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -47,7 +48,7 @@ func TestMerchantService(t *testing.T) {
 	ctx := context.Background()
 	data, err := c.GET("/member/services").P("member_id", "73a563c6c3884b1fb88bf0093dbd04a3").Auth(c.Presign(time.Minute)).Do(ctx).Bytes()
 	assert.Nil(t, err)
-	assert.NotEmpty(t, string(data))
+	assert.Empty(t, string(data))
 }
 
 func TestClearMemberSession(t *testing.T) {
@@ -56,4 +57,18 @@ func TestClearMemberSession(t *testing.T) {
 	c := NewMerchantClient(apiBase).WithSession(merchantKey, merchantSecret)
 	err := c.ClearUserSessions(ctx, "73a563c6c3884b1fb88bf0093dbd04a3")
 	assert.Nil(t, err)
+}
+
+func TestJsonMarshalBytes(t *testing.T) {
+	var form struct {
+		Body []byte `json:"body"`
+	}
+
+	form.Body = []byte("{\"name\":\"yiplee\"}")
+	data, _ := json.Marshal(form)
+	assert.Empty(t, string(data))
+
+	form.Body = nil
+	json.Unmarshal(data, &form)
+	assert.Empty(t, string(form.Body))
 }

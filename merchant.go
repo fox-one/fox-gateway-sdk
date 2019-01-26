@@ -2,12 +2,12 @@ package gateway
 
 import (
 	"context"
-	"log"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/fox-one/httpclient"
 	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 )
 
 type MerchantClient struct {
