@@ -49,3 +49,11 @@ func TestMerchantService(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, string(data))
 }
+
+func TestClearMemberSession(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
+	ctx := context.Background()
+	c := NewMerchantClient(apiBase).WithSession(merchantKey, merchantSecret)
+	err := c.ClearUserSessions(ctx, "73a563c6c3884b1fb88bf0093dbd04a3")
+	assert.Nil(t, err)
+}
