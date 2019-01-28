@@ -60,7 +60,7 @@ func (m *MemberService) ReadAsset(ctx context.Context, assetID string) (*WalletU
 }
 
 // GetSnapshots 读取转账记录列表
-func (m *MemberService) ReadSnapshots(ctx context.Context, assetID string, cursor string, limit int, order string) ([]*WalletSnapshotView, error) {
+func (m *MemberService) ReadSnapshots(ctx context.Context, assetID string, cursor string, limit int, order string) ([]*WalletSnapshotView, *Pagination, error) {
 	result := m.GET("/snapshots/"+assetID).
 		P("cursor", cursor).
 		P("limit", limit).
@@ -70,21 +70,24 @@ func (m *MemberService) ReadSnapshots(ctx context.Context, assetID string, curso
 
 	data, err := result.Bytes()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	var snapshots []*WalletSnapshotView
-	if jsoniter.Unmarshal(data, &snapshots) == nil {
-		return snapshots, nil
+	var resp struct {
+		Err
+		Snapshots  []*WalletSnapshotView `json:"snapshots"`
+		Pagination *Pagination           `json:"pagination"`
 	}
 
-	var e Err
-	if jsoniter.Unmarshal(data, e) == nil && e.Code > 0 {
-		return nil, e
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, nil, err
 	}
 
-	_, status := result.Status()
-	return nil, errors.New(status)
+	if resp.Code > 0 {
+		return nil, nil, resp.Err
+	}
+
+	return resp.Snapshots, resp.Pagination, nil
 }
 
 func (m *MemberService) ReadSnapshot(ctx context.Context, id string) (*WalletSnapshotView, error) {
