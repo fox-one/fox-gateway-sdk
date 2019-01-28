@@ -14,8 +14,7 @@ func TestGetAssets(t *testing.T) {
 	memberSvc := merchantClient.MemberService("payment", "e0814259f9c34d58b010eb674049d883")
 
 	ctx := context.Background()
-
-	assets, _ := memberSvc.GetAssets(ctx)
-
+	assets, err := memberSvc.ReadAssets(ctx, 1)
+	assert.Nil(t, err)
 	assert.NotEmpty(t, assets)
 }

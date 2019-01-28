@@ -23,6 +23,7 @@ type AdminUserView struct {
 	Merchant  string `json:"merchant"`
 }
 
+// AdminSessionView session of admin
 type AdminSessionView struct {
 	Key       string `json:"key"`
 	Secret    string `json:"secret"`
@@ -30,40 +31,54 @@ type AdminSessionView struct {
 	ExpiredAt int64  `json:"expired_at"`
 }
 
+// MemberWalletView member Wallet
+type MemberWalletView struct {
+	Label    string `json:"label"`
+	MemberID string `json:"member_id"`
+	Service  string `json:"service"`
+	WalletID string `json:"wallet_id"`
+}
+
 // wallet
 
 // Asset asset
 type WalletAssetView struct {
-	AssetID  string `json:"asset_id"`
-	AssetKey string `json:"asset_key,omitempty"`
-	ChainID  string `json:"chain_id"`
+	AssetID string `json:"asset_id"`
+	ChainID string `json:"chain_id"`
 
 	Name    string `json:"name"`
 	Symbol  string `json:"symbol"`
 	IconURL string `json:"icon_url"`
+
+	Price  string `json:"price"`
+	Change string `json:"change"`
 }
 
-// UserAddress user address
-type WalletUserAddressView struct {
-	UserID  string `json:"user_id"`
-	ChainID string `json:"chain_id"`
+type WalletUserAssetView struct {
+	WalletAssetView
 
+	Balance     string `json:"balance"`
 	PublicKey   string `json:"public_key"`
 	AccountName string `json:"account_name"`
 	AccountTag  string `json:"account_tag"`
-
-	Confirmations  int     `json:"confirmations"`
-	Capitalization float64 `json:"capitalization"`
 }
 
-// WalletUserAssetView wallet user asset view
-type WalletUserAssetView struct {
-	AssetID           string                 `json:"asset_id"`
-	Balance           string                 `json:"balance"`
-	TransactionAmount string                 `json:"transaction_amount"`
-	TransactionCount  int64                  `json:"transaction_count"`
-	Asset             *WalletAssetView       `json:"asset,omitempty"`
-	Address           *WalletUserAddressView `json:"address,omitempty"`
+// Snapshot model
+type WalletSnapshotView struct {
+	SnapshotID string `json:"snapshot_id"`
+	TraceID    string `json:"trace_id"`
+	WalletID   string `json:"wallet_id"`
+	AssetID    string `json:"asset_id"`
+	OpponentID string `json:"opponent_id"`
+	Source     string `json:"source"`
+	Amount     string `json:"amount"`
+	Memo       string `json:"memo"`
+	MemberID   string `json:"member_id"`
+	Service    string `json:"service"`
+	Label      string `json:"label"`
+	CreatedAt  int64  `json:"created_at"`
+
+	Asset WalletAssetView `json:"asset"`
 }
 
 // Exchange
