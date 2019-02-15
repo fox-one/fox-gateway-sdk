@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -163,4 +164,30 @@ func (m *MerchantClient) ClearUserSessions(ctx context.Context, memberID string,
 	}
 
 	return nil
+}
+
+func (m *MerchantClient) MemberWallets(ctx context.Context, memberID string, service string) ([]*MemberWalletView, error) {
+	result := m.GET("/member/services").
+		P("member_id", memberID).
+		P("service", service).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx)
+
+	data, err := result.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var wallets []*MemberWalletView
+	if err := jsoniter.Unmarshal(data, &wallets); err == nil {
+		return wallets, nil
+	}
+
+	var e Err
+	if jsoniter.Unmarshal(data, e) == nil && e.Code > 0 {
+		return nil, e
+	}
+
+	_, status := result.Status()
+	return nil, errors.New(status)
 }

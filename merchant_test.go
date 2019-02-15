@@ -46,9 +46,14 @@ func TestMerchantService(t *testing.T) {
 	c := NewMerchantClient(apiBase).WithSession(merchantKey, merchantSecret)
 
 	ctx := context.Background()
-	data, err := c.GET("/member/services").P("member_id", "73a563c6c3884b1fb88bf0093dbd04a3").Auth(c.Presign(time.Minute)).Do(ctx).Bytes()
-	assert.Nil(t, err)
-	assert.Empty(t, string(data))
+	memberID := "73a563c6c3884b1fb88bf0093dbd04a3"
+	wallets, err := c.MemberWallets(ctx, memberID, "")
+	if assert.Nil(t, err) && assert.NotEmpty(t, wallets) {
+		w := wallets[0]
+		assert.NotEmpty(t, w.WalletID)
+		assert.Equal(t, memberID, w.MemberID)
+	}
+
 }
 
 func TestClearMemberSession(t *testing.T) {

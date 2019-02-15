@@ -15,7 +15,7 @@ func (m *MemberService) ReadAssets(ctx context.Context, chain int) ([]*WalletUse
 		Do(ctx)
 
 	data, err := result.Bytes()
-	if err := result.Err(); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
