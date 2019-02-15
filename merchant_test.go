@@ -49,9 +49,10 @@ func TestMerchantService(t *testing.T) {
 	memberID := "73a563c6c3884b1fb88bf0093dbd04a3"
 	wallets, err := c.MemberWallets(ctx, memberID, "")
 	if assert.Nil(t, err) && assert.NotEmpty(t, wallets) {
-		w := wallets[0]
-		assert.NotEmpty(t, w.WalletID)
-		assert.Equal(t, memberID, w.MemberID)
+		for _, w := range wallets {
+			assert.NotEmpty(t, w.WalletID)
+			assert.Equal(t, memberID, w.MemberID)
+		}
 	}
 
 }
