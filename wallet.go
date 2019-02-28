@@ -25,7 +25,7 @@ func (m *MemberService) ReadAssets(ctx context.Context, chain int) ([]*WalletUse
 	}
 
 	var e Err
-	if jsoniter.Unmarshal(data, e) == nil && e.Code > 0 {
+	if jsoniter.Unmarshal(data, &e) == nil && e.Code > 0 {
 		return nil, e
 	}
 

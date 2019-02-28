@@ -184,7 +184,7 @@ func (m *MerchantClient) MemberWallets(ctx context.Context, memberID string, ser
 	}
 
 	var e Err
-	if jsoniter.Unmarshal(data, e) == nil && e.Code > 0 {
+	if jsoniter.Unmarshal(data, &e) == nil && e.Code > 0 {
 		return nil, e
 	}
 
