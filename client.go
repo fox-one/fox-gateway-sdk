@@ -23,8 +23,8 @@ func (c *Client) Group(group string) *Client {
 func NewClient(apiBase string) *Client {
 	c := httpclient.NewClient(apiBase)
 	c.OnRequest = func(req *httpclient.Request, method, uri string) {
-		req.P(timestampKey, time.Now().Unix())
-		req.P(nonceKey, uuid.Must(uuid.NewV4()).String())
+		req.Q(timestampKey, time.Now().Unix())
+		req.Q(nonceKey, uuid.Must(uuid.NewV4()).String())
 	}
 
 	return &Client{c}
