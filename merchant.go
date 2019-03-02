@@ -191,3 +191,35 @@ func (m *MerchantClient) MemberWallets(ctx context.Context, memberID string, ser
 	_, status := result.Status()
 	return nil, errors.New(status)
 }
+
+func (m *MerchantClient) FetchSnapshots(ctx context.Context, service, assetID, cursor, order string, limit int) ([]*WalletSnapshotView, *Pagination, error) {
+	result := m.GET("/member/snapshots").
+		P("service", service).
+		P("asset_id", assetID).
+		P("cursor", cursor).
+		P("order", order).
+		P("limit", limit).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx)
+
+	data, err := result.Bytes()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var resp struct {
+		Err
+		Snapshots  []*WalletSnapshotView `json:"snapshots"`
+		Pagination *Pagination           `json:"pagination"`
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, nil, err
+	}
+
+	if resp.Code > 0 {
+		return nil, nil, resp.Err
+	}
+
+	return resp.Snapshots, resp.Pagination, nil
+}
