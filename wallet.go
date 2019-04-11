@@ -61,7 +61,12 @@ func (m *MemberService) ReadAsset(ctx context.Context, assetID string) (*WalletU
 
 // GetSnapshots 读取转账记录列表
 func (m *MemberService) ReadSnapshots(ctx context.Context, assetID string, cursor string, limit int, order string) ([]*WalletSnapshotView, *Pagination, error) {
-	result := m.GET("/snapshots/"+assetID).
+	path := "/snapshots"
+	if assetID != "" {
+		path += "/" + assetID
+	}
+
+	result := m.GET(path).
 		P("cursor", cursor).
 		P("limit", limit).
 		P("order", order).
