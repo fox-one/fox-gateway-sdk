@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"strings"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -17,7 +18,7 @@ func (m *MemberService) ExchangeOrder(ctx context.Context, amount, price, side, 
 		"type":     orderType,
 	})
 
-	data, err := req.Do(ctx).Bytes()
+	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return nil, err
 	}
