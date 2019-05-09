@@ -5,11 +5,73 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"errors"
+	"os"
 
 	uuid "github.com/satori/go.uuid"
 )
+
+var (
+	// production
+	DefaultPublicKey = `-----BEGIN RSA PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0/SMrN1Ki50xAD0mjIjA
+NroYtZ+dtFh9i2gT8ANy9ObQplKJQedM5VDviEqnNiyNgQj6byso3EnykgG7JbpQ
+qwt7XgAwO+uE01EdGi46G59DzvobBfwchmV9q9caHE0od95XukCq7vQzlpL/IS2+
+BWaG6RjYeqcE7mxdmcVIzQ6ifcY4tfcAnEXqVz5kAcKM+GbLVDOhdeb3LPpkydNT
+Li+q8vY1PrnnWDlGnJORosBuRS5IXab7QxojKFx1lrq4EvnKGeyB6m3+h14Ixlcv
+/QO5p7RR4lI9hs11Ecatritck25xQQ+YO4n0gYAvScxV0t0nQGBjmsN11Nm4Hl1x
+kwIDAQAB
+-----END RSA PUBLIC KEY-----`
+
+	pkEnvKey = "FOX_GATEWAY_PUBLIC_KEY"
+)
+
+func getPublicKey() (*rsa.PublicKey, error) {
+	key := os.Getenv(pkEnvKey)
+	if key == "" {
+		key = DefaultPublicKey
+	}
+
+	block, _ := pem.Decode([]byte(key))
+	if block == nil {
+		return nil, errors.New("decode pem failed")
+	}
+
+	pkey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	rsaKey, ok := pkey.(*rsa.PublicKey)
+	if !ok {
+		return nil, errors.New("key is not public key")
+	}
+
+	return rsaKey, nil
+}
+
+func rsaEncrypt(data []byte) (string, error) {
+	pub, err := getPublicKey()
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.New()
+	random := rand.Reader
+
+	encryptedData, err := rsa.EncryptOAEP(hash, random, pub, data, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(encryptedData), nil
+}
 
 func signRequest(method, uri, body string) string {
 	h := sha256.New()

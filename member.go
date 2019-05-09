@@ -41,14 +41,7 @@ type memberAuth struct {
 	*MemberClient
 
 	pin    string
-	nonce  string
 	expire time.Duration
-}
-
-func (m *memberAuth) PrepareAuth(req *httpclient.Request) {
-	if m.nonce != "" {
-		req.P(nonceKey, m.nonce)
-	}
 }
 
 func (m *memberAuth) token(method, uri string, body []byte) string {
@@ -60,17 +53,16 @@ func (m *memberAuth) token(method, uri string, body []byte) string {
 
 	if len(m.pin) > 0 {
 		payload := map[string]interface{}{
+			"t": time.Now().Unix(),
+			"n": newNonce(),
 			"p": m.pin,
-			"n": m.nonce,
 		}
 
 		data, _ := jsoniter.Marshal(payload)
+		pinToken, err := rsaEncrypt(data)
 
-		aeskey := MD5(m.key)
-		aesiv := []byte(m.secret)
-		pinToken, err := Encrypt(data, aeskey, aesiv)
 		if err != nil {
-			log.Panicln("encrypt pin", err)
+			log.Panic(err)
 		}
 
 		claims["pin"] = pinToken
@@ -93,7 +85,6 @@ func (m *MemberClient) PresignWithPin(pin string, expire time.Duration) *memberA
 	return &memberAuth{
 		MemberClient: m,
 		pin:          pin,
-		nonce:        newNonce(),
 		expire:       expire,
 	}
 }
@@ -129,6 +120,52 @@ func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {
 	}
 
 	return resp.Member, nil
+}
+
+func (m *MemberClient) VerifyPin(ctx context.Context, pin string) (bool, error) {
+	data, err := m.POST("/pin").Auth(m.PresignWithPin(pin, time.Minute)).Do(ctx).Bytes()
+	if err != nil {
+		return false, err
+	}
+
+	var resp Err
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return false, err
+	}
+
+	switch resp.Code {
+	case 0:
+		return true, nil
+	case 1104:
+		return false, nil
+	default:
+		return false, resp
+	}
+}
+
+func (m *MemberClient) UpdatePin(ctx context.Context, pin, newPin string) error {
+	pinToken, err := rsaEncrypt([]byte(newPin))
+	if err != nil {
+		return err
+	}
+
+	data, err := m.PUT("/pin").Auth(m.PresignWithPin(pin, time.Minute)).P("pin", pinToken).Do(ctx).Bytes()
+	if err != nil {
+		return err
+	}
+
+	var resp Err
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return err
+	}
+
+	if resp.Code != 0 {
+		return resp
+	}
+
+	return nil
 }
 
 func (m *MemberClient) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
