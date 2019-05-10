@@ -29,15 +29,6 @@ func (m *MemberClient) ServiceWithPin(name, pin string) *MemberService {
 	}
 }
 
-func (m *MerchantClient) MemberService(name, member string) *MemberService {
-	return &MemberService{
-		Client: m.Group("/member/" + name),
-		authFunc: func(expire time.Duration) httpclient.Authenticator {
-			return m.PresignMember(member, expire)
-		},
-	}
-}
-
 func (m *MemberService) Presign(expire time.Duration) httpclient.Authenticator {
 	return m.authFunc(expire)
 }

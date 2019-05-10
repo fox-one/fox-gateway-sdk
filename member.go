@@ -13,8 +13,7 @@ import (
 type MemberClient struct {
 	*Client
 
-	key    string
-	secret string
+	MemberAuth
 }
 
 func (c *Client) Member() *MemberClient {
@@ -27,19 +26,22 @@ func NewMemberClient(apiBase string) *MemberClient {
 	return NewClient(apiBase).Member()
 }
 
-func (c *MemberClient) WithSession(key, secret string) *MemberClient {
+func (c *MemberClient) WithAuth(auth MemberAuth) *MemberClient {
 	return &MemberClient{
-		Client: c.Client,
-		key:    key,
-		secret: secret,
+		Client:     c.Client,
+		MemberAuth: auth,
 	}
+}
+
+func (c *MemberClient) WithSession(key, secret string) *MemberClient {
+	return c.WithAuth(&memberSessionAuth{key, secret})
 }
 
 // auth
 
 type memberAuth struct {
-	*MemberClient
-
+	key    string
+	secret string
 	pin    string
 	expire time.Duration
 }
@@ -79,26 +81,6 @@ func (m *memberAuth) token(method, uri string, body []byte) string {
 
 func (m *memberAuth) Auth(req *httpclient.Request, method, uri string, body []byte) {
 	req.AddToken(m.token(method, uri, body))
-}
-
-func (m *MemberClient) PresignWithPin(pin string, expire time.Duration) *memberAuth {
-	return &memberAuth{
-		MemberClient: m,
-		pin:          pin,
-		expire:       expire,
-	}
-}
-
-func (m *MemberClient) Presign(expire time.Duration) *memberAuth {
-	return &memberAuth{MemberClient: m, expire: expire}
-}
-
-func (m *MemberClient) Sign(method, uri string, body []byte, expire time.Duration) string {
-	return m.Presign(expire).token(method, uri, body)
-}
-
-func (m *MemberClient) SignWithPin(pin, method, uri string, body []byte, expire time.Duration) string {
-	return m.PresignWithPin(pin, expire).token(method, uri, body)
 }
 
 func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {

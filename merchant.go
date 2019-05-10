@@ -35,11 +35,21 @@ func (c *MerchantClient) WithSession(key, secret string) *MerchantClient {
 	}
 }
 
+func (c *MerchantClient) Member(id string) *MemberClient {
+	return c.Client.Member().WithAuth(&merchantMemberAuth{
+		merchantKey:    c.key,
+		merchantSecret: c.secret,
+		memberID:       id,
+	})
+}
+
 // auth
 type merchantAuth struct {
-	*MerchantClient
-	memberID string
-	expire   time.Duration
+	key       string
+	secret    string
+	memberID  string
+	memberPin string
+	expire    time.Duration
 }
 
 func (m *merchantAuth) token(method, uri string, body []byte) string {
@@ -49,8 +59,25 @@ func (m *merchantAuth) token(method, uri string, body []byte) string {
 		"key":  m.key,
 	}
 
-	if len(m.memberID) > 0 {
+	if m.memberID != "" {
 		claims["mem"] = m.memberID
+
+		if m.memberPin != "" {
+			payload := map[string]interface{}{
+				"t": time.Now().Unix(),
+				"n": newNonce(),
+				"p": m.memberPin,
+			}
+
+			data, _ := jsoniter.Marshal(payload)
+			pinToken, err := rsaEncrypt(data)
+
+			if err != nil {
+				log.Panic(err)
+			}
+
+			claims["pin"] = pinToken
+		}
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -66,24 +93,12 @@ func (m *merchantAuth) Auth(req *httpclient.Request, method, uri string, body []
 	req.AddToken(m.token(method, uri, body))
 }
 
-func (m *MerchantClient) PresignMember(memberID string, expire time.Duration) *merchantAuth {
-	return &merchantAuth{
-		MerchantClient: m,
-		expire:         expire,
-		memberID:       memberID,
-	}
-}
-
 func (m *MerchantClient) Presign(expire time.Duration) *merchantAuth {
-	return m.PresignMember("", expire)
-}
-
-func (m *MerchantClient) Sign(method, uri string, body []byte, expire time.Duration) string {
-	return m.Presign(expire).token(method, uri, body)
-}
-
-func (m *MerchantClient) SignMember(memberID, method, uri string, body []byte, expire time.Duration) string {
-	return m.PresignMember(memberID, expire).token(method, uri, body)
+	return &merchantAuth{
+		key:    m.key,
+		secret: m.secret,
+		expire: expire,
+	}
 }
 
 // member
