@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
@@ -62,7 +63,7 @@ func rsaEncrypt(data []byte) (string, error) {
 		return "", err
 	}
 
-	hash := sha256.New()
+	hash := sha1.New()
 	random := rand.Reader
 
 	encryptedData, err := rsa.EncryptOAEP(hash, random, pub, data, nil)
