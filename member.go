@@ -104,26 +104,19 @@ func (m *MemberClient) MemberInfo(ctx context.Context) (*MemberView, error) {
 	return resp.Member, nil
 }
 
-func (m *MemberClient) VerifyPin(ctx context.Context, pin string) (bool, error) {
+func (m *MemberClient) VerifyPin(ctx context.Context, pin string) error {
 	data, err := m.POST("/pin").Auth(m.PresignWithPin(pin, time.Minute)).Do(ctx).Bytes()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	var resp Err
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
-		return false, err
+		return err
 	}
 
-	switch resp.Code {
-	case 0:
-		return true, nil
-	case 1104:
-		return false, nil
-	default:
-		return false, resp
-	}
+	return gatewayErr(resp)
 }
 
 func (m *MemberClient) UpdatePin(ctx context.Context, pin, newPin string) error {
@@ -143,11 +136,7 @@ func (m *MemberClient) UpdatePin(ctx context.Context, pin, newPin string) error 
 		return err
 	}
 
-	if resp.Code != 0 {
-		return resp
-	}
-
-	return nil
+	return gatewayErr(resp)
 }
 
 func (m *MemberClient) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
