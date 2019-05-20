@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -43,9 +44,11 @@ func (m *MemberService) ReadAsset(ctx context.Context, assetID string) (*WalletU
 		return nil, err
 	}
 
+	fmt.Println(string(data))
+
 	var resp struct {
 		Err
-		*WalletUserAssetView
+		Asset *WalletUserAssetView `json:"asset"`
 	}
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
@@ -56,7 +59,7 @@ func (m *MemberService) ReadAsset(ctx context.Context, assetID string) (*WalletU
 		return nil, resp.Err
 	}
 
-	return resp.WalletUserAssetView, nil
+	return resp.Asset, nil
 }
 
 // GetSnapshots 读取转账记录列表
@@ -194,4 +197,35 @@ func (m *MemberService) Transfer(ctx context.Context, op *WalletTransferOperatio
 	}
 
 	return resp.WalletSnapshotView, nil
+}
+
+// wallet public
+
+func (c *Client) WithdrawFee(ctx context.Context, assetId string, publicKey string, accountName, accountTag string) (*WalletAssetView, string, error) {
+	req := c.GET("/wallet/withdraw-fee").
+		Q("asset_id", assetId).
+		Q("public_key", publicKey).
+		Q("account_name", accountName).
+		Q("account_tag", accountTag)
+
+	data, err := req.Do(ctx).Bytes()
+	if err != nil {
+		return nil, "", err
+	}
+
+	var resp struct {
+		Err
+		Asset *WalletAssetView `json:"fee_asset"`
+		Fee   string           `json:"fee_amount"`
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, resp.Fee, err
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Fee, resp.Err
+	}
+
+	return resp.Asset, resp.Fee, nil
 }

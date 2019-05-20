@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -110,6 +111,7 @@ func (m *MemberClient) VerifyPin(ctx context.Context, pin string) error {
 		return err
 	}
 
+	fmt.Println(string(data))
 	var resp Err
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
