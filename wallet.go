@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -43,8 +42,6 @@ func (m *MemberService) ReadAsset(ctx context.Context, assetID string) (*WalletU
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(string(data))
 
 	var resp struct {
 		Err
@@ -152,7 +149,7 @@ func (m *MemberService) Withdraw(ctx context.Context, op *WalletWithdrawOperatio
 
 	var resp struct {
 		Err
-		*WalletSnapshotView
+		Snapshot *WalletSnapshotView `json:"snapshot"`
 	}
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
@@ -163,7 +160,7 @@ func (m *MemberService) Withdraw(ctx context.Context, op *WalletWithdrawOperatio
 		return nil, resp.Err
 	}
 
-	return resp.WalletSnapshotView, nil
+	return resp.Snapshot, nil
 }
 
 type WalletTransferOperation struct {
@@ -185,7 +182,7 @@ func (m *MemberService) Transfer(ctx context.Context, op *WalletTransferOperatio
 
 	var resp struct {
 		Err
-		*WalletSnapshotView
+		Snapshot *WalletSnapshotView `json:"snapshot"`
 	}
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
@@ -196,7 +193,7 @@ func (m *MemberService) Transfer(ctx context.Context, op *WalletTransferOperatio
 		return nil, resp.Err
 	}
 
-	return resp.WalletSnapshotView, nil
+	return resp.Snapshot, nil
 }
 
 // wallet public

@@ -52,6 +52,7 @@ type WalletAssetView struct {
 
 	Price    string `json:"price"`
 	PriceUSD string `json:"price_usd"`
+	PriceBTC string `json:"price_btc"`
 	Change   string `json:"change"`
 }
 

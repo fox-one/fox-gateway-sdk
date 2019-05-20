@@ -36,7 +36,8 @@ func decodeErr(data []byte) (e Err) {
 }
 
 var (
-	ErrPinInvalid = errors.New("invalid pin") // 1104
+	ErrPinInvalid          = errors.New("invalid pin")          // 1104
+	ErrInsufficientBalance = errors.New("insufficient balance") // 1161
 )
 
 func gatewayErr(e Err) error {
@@ -45,6 +46,8 @@ func gatewayErr(e Err) error {
 		return nil
 	case 1104:
 		return ErrPinInvalid
+	case 1161:
+		return ErrInsufficientBalance
 	default:
 		return e
 	}
