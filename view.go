@@ -67,18 +67,20 @@ type WalletUserAssetView struct {
 
 // Snapshot model
 type WalletSnapshotView struct {
-	SnapshotID string `json:"snapshot_id"`
-	TraceID    string `json:"trace_id"`
-	WalletID   string `json:"wallet_id"`
-	AssetID    string `json:"asset_id"`
-	OpponentID string `json:"opponent_id"`
-	Source     string `json:"source"`
-	Amount     string `json:"amount"`
-	Memo       string `json:"memo"`
-	MemberID   string `json:"member_id"`
-	Service    string `json:"service"`
-	Label      string `json:"label"`
-	CreatedAt  int64  `json:"created_at"`
+	SnapshotID      string      `json:"snapshot_id"`
+	TraceID         string      `json:"trace_id"`
+	WalletID        string      `json:"wallet_id"`
+	AssetID         string      `json:"asset_id"`
+	OpponentID      string      `json:"opponent_id"`
+	Source          string      `json:"source"`
+	Amount          string      `json:"amount"`
+	Memo            string      `json:"memo"`
+	MemberID        string      `json:"member_id"`
+	Service         string      `json:"service"`
+	Label           string      `json:"label"`
+	CreatedAt       int64       `json:"created_at"`
+	TransactionHash string      `json:"transaction_hash"`
+	ExtraData       interface{} `json:"data"`
 
 	Asset WalletAssetView `json:"asset"`
 }
