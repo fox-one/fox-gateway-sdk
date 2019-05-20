@@ -50,10 +50,12 @@ type WalletAssetView struct {
 	Symbol  string `json:"symbol"`
 	IconURL string `json:"icon_url"`
 
-	Price    string `json:"price"`
-	PriceUSD string `json:"price_usd"`
-	PriceBTC string `json:"price_btc"`
-	Change   string `json:"change"`
+	Price     string `json:"price"`
+	PriceUSD  string `json:"price_usd"`
+	PriceBTC  string `json:"price_btc"`
+	Change    string `json:"change"`
+	ChangeUSD string `json:"change_usd"`
+	ChangeBTC string `json:"change_btc"`
 }
 
 type WalletUserAssetView struct {
@@ -63,6 +65,8 @@ type WalletUserAssetView struct {
 	PublicKey   string `json:"public_key"`
 	AccountName string `json:"account_name"`
 	AccountTag  string `json:"account_tag"`
+
+	Chain *WalletAssetView `json:"chain"`
 }
 
 // Snapshot model
