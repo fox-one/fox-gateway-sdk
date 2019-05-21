@@ -107,7 +107,7 @@ func (m *MemberService) ReadSnapshot(ctx context.Context, id string) (*WalletSna
 
 	var resp struct {
 		Err
-		*WalletSnapshotView
+		Snapshot *WalletSnapshotView `json:"snapshot"`
 	}
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
@@ -118,7 +118,7 @@ func (m *MemberService) ReadSnapshot(ctx context.Context, id string) (*WalletSna
 		return nil, resp.Err
 	}
 
-	return resp.WalletSnapshotView, nil
+	return resp.Snapshot, nil
 }
 
 type WalletAssetOperation struct {
