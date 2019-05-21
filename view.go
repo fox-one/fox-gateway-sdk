@@ -84,6 +84,8 @@ type WalletSnapshotView struct {
 	Label           string      `json:"label"`
 	CreatedAt       int64       `json:"created_at"`
 	TransactionHash string      `json:"transaction_hash"`
+	Sender          string      `json:"sender"`
+	Receiver        string      `json:"receiver"`
 	ExtraData       interface{} `json:"data"`
 
 	Asset WalletAssetView `json:"asset"`
