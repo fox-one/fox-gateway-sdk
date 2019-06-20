@@ -21,3 +21,15 @@ func TestWithdrawFee(t *testing.T) {
 		assert.True(t, f.IsPositive())
 	}
 }
+
+func TestSearchUser(t *testing.T) {
+	c := NewClient("https://dev-gateway.fox.one")
+	ctx := context.Background()
+	user, err := c.SearchWalletUser(ctx, "8017d200-7870-4b82-b53f-74bae1d2dad7")
+	if assert.Nil(t, err) {
+		assert.NotEmpty(t, user.ID)
+		assert.NotEmpty(t, user.Fullname)
+		assert.NotEmpty(t, user.Avatar)
+		assert.Equal(t, "yiplee", user.Fullname)
+	}
+}

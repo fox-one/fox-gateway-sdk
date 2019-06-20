@@ -226,3 +226,27 @@ func (c *Client) WithdrawFee(ctx context.Context, assetId string, publicKey stri
 
 	return resp.Asset, resp.Fee, nil
 }
+
+func (c *Client) SearchWalletUser(ctx context.Context, id string) (*WalletUserView, error) {
+	r := c.GET("/wallet/user/" + id).Do(ctx)
+	data, err := r.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Err
+		*WalletUserView
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		_, status := r.Status()
+		return nil, errors.New(status)
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Err
+	}
+
+	return resp.WalletUserView, nil
+}

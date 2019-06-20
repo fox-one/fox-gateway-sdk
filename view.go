@@ -41,6 +41,12 @@ type MemberWalletView struct {
 
 // wallet
 
+type WalletUserView struct {
+	ID       string `json:"id"`
+	Fullname string `json:"fullname"`
+	Avatar   string `json:"avatar"`
+}
+
 // Asset asset
 type WalletAssetView struct {
 	AssetID string `json:"asset_id"`

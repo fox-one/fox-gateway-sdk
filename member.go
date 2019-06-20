@@ -141,6 +141,27 @@ func (m *MemberClient) UpdatePin(ctx context.Context, pin, newPin string) error 
 	return gatewayErr(resp)
 }
 
+func (m *MemberClient) UpdateProfile(ctx context.Context, fullname, avatar string) (*MemberView, error) {
+	data, err := m.PUT("/profile").P("fullname", fullname).P("avatar", avatar).Do(ctx).Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Err
+		Member *MemberView `json:"member"`
+	}
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Err
+	}
+
+	return resp.Member, nil
+}
+
 func (m *MemberClient) Validate(ctx context.Context, method, uri, body, token string) (string, error) {
 	data, err := m.POST("/validate").
 		P("method", method).
