@@ -142,7 +142,7 @@ func (m *MemberClient) UpdatePin(ctx context.Context, pin, newPin string) error 
 }
 
 func (m *MemberClient) UpdateProfile(ctx context.Context, fullname, avatar string) (*MemberView, error) {
-	data, err := m.PUT("/profile").P("fullname", fullname).P("avatar", avatar).Do(ctx).Bytes()
+	data, err := m.PUT("/profile").Auth(m.Presign(time.Minute)).P("fullname", fullname).P("avatar", avatar).Do(ctx).Bytes()
 	if err != nil {
 		return nil, err
 	}
