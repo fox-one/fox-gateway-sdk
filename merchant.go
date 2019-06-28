@@ -103,28 +103,33 @@ func (m *MerchantClient) Presign(expire time.Duration) *merchantAuth {
 
 // member
 
-func (m *MerchantClient) CreateMember(ctx context.Context) (*MemberView, *MemberSessionView, error) {
+type CreateMemberOutput struct {
+	Member  *MemberView         `json:"member,omitempty"`
+	Session *MemberSessionView  `json:"session,omitempty"`
+	Wallets []*MemberWalletView `json:"wallets,omitempty"`
+}
+
+func (m *MerchantClient) CreateMember(ctx context.Context) (*CreateMemberOutput, error) {
 	data, err := m.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var resp struct {
 		Err
 
-		Member  *MemberView        `json:"member"`
-		Session *MemberSessionView `json:"session"`
+		*CreateMemberOutput
 	}
 
 	if err := jsoniter.Unmarshal(data, &resp); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if resp.Code > 0 {
-		return nil, nil, resp.Err
+		return nil, resp.Err
 	}
 
-	return resp.Member, resp.Session, nil
+	return resp.CreateMemberOutput, nil
 }
 
 func (m *MerchantClient) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {

@@ -24,10 +24,12 @@ func main() {
 	merchantSrv := gateway.NewMerchantClient(api).WithSession(merchantKey, merchantSecret)
 
 	// create member
-	member, _, err := merchantSrv.CreateMember(ctx)
+	output, err := merchantSrv.CreateMember(ctx)
 	if err != nil {
 		log.Panic(err)
 	}
+
+	member := output.Member
 
 	// update member profile
 	if _, err := merchantSrv.Member(member.ID).UpdateProfile(ctx, "name", "http://avatar.com"); err != nil {

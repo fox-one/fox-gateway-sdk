@@ -21,10 +21,13 @@ func TestMerchantCreateMember(t *testing.T) {
 	c := NewMerchantClient(apiBase).WithSession(merchantKey, merchantSecret)
 
 	ctx := context.Background()
-	m, s, err := c.CreateMember(ctx)
+	output, err := c.CreateMember(ctx)
 	if !assert.Nil(t, err) {
 		return
 	}
+
+	s := output.Session
+	m := output.Member
 
 	assert.NotEmpty(t, s.Key)
 	assert.NotEmpty(t, s.Secret)
