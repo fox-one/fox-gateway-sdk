@@ -112,7 +112,7 @@ type CreateMemberOutput struct {
 func (m *MerchantClient) CreateMember(ctx context.Context, showSessionKey ...bool) (*CreateMemberOutput, error) {
 	req := m.POST("/member/new")
 	if len(showSessionKey) > 0 && showSessionKey[0] {
-		req = req.P("session_key", true)
+		req = req.P("show_private_key", true)
 	}
 	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
