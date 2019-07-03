@@ -33,10 +33,12 @@ type AdminSessionView struct {
 
 // MemberWalletView member Wallet
 type MemberWalletView struct {
-	Label    string `json:"label"`
-	MemberID string `json:"member_id"`
-	Service  string `json:"service"`
-	WalletID string `json:"wallet_id"`
+	Label      string `json:"label"`
+	MemberID   string `json:"member_id"`
+	Service    string `json:"service"`
+	WalletID   string `json:"wallet_id"`
+	SessionID  string `json:"session_id,omitempty"`
+	SessionKey string `json:"session_key,omitempty"`
 }
 
 // wallet
