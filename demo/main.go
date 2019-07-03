@@ -24,7 +24,7 @@ func main() {
 	merchantSrv := gateway.NewMerchantClient(api).WithSession(merchantKey, merchantSecret)
 
 	// create member
-	output, err := merchantSrv.CreateMember(ctx)
+	output, err := merchantSrv.CreateMember(ctx, true)
 	if err != nil {
 		log.Panic(err)
 	}

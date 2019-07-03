@@ -109,8 +109,12 @@ type CreateMemberOutput struct {
 	Wallets []*MemberWalletView `json:"wallets,omitempty"`
 }
 
-func (m *MerchantClient) CreateMember(ctx context.Context) (*CreateMemberOutput, error) {
-	data, err := m.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
+func (m *MerchantClient) CreateMember(ctx context.Context, showSessionKey ...bool) (*CreateMemberOutput, error) {
+	req := m.POST("/member/new")
+	if len(showSessionKey) > 0 && showSessionKey[0] {
+		req = req.P("session_key", true)
+	}
+	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
 		return nil, err
 	}
