@@ -250,3 +250,23 @@ func (c *Client) SearchWalletUser(ctx context.Context, id string) (*WalletUserVi
 
 	return resp.WalletUserView, nil
 }
+
+func (c *Client) AllAssets(ctx context.Context) ([]*WalletAssetView, error) {
+	r := c.GET("/wallet/all-assets").Do(ctx)
+	data, err := r.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	assets := []*WalletAssetView{}
+	if err := jsoniter.Unmarshal(data, &assets); err == nil {
+		return assets, nil
+	}
+
+	var e Err
+	if jsoniter.Unmarshal(data, &e) == nil && e.Code > 0 {
+		return nil, e
+	}
+
+	return nil, r.StatusErr()
+}
