@@ -121,6 +121,82 @@ func (m *MemberService) ReadSnapshot(ctx context.Context, id string) (*WalletSna
 	return resp.Snapshot, nil
 }
 
+// ReadAddresses fetch user addresses
+func (m *MemberService) ReadAddresses(ctx context.Context, assetID string) ([]*WithdrawAddressView, error) {
+	data, err := m.GET("/addresses").
+		P("asset_id", assetID).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx).Bytes()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Err
+		Addresses []*WithdrawAddressView `json:"addresses"`
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Err
+	}
+
+	return resp.Addresses, nil
+}
+
+// UpsertAddress add/update user address
+func (m *MemberService) UpsertAddress(ctx context.Context, op *WithdrawAddressView) (*WithdrawAddressView, error) {
+	data, err := m.POST("/address").
+		Body(op).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx).Bytes()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Err
+		Address *WithdrawAddressView `json:"address"`
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Err
+	}
+
+	return resp.Address, nil
+}
+
+// DeleteAddress delete user address
+func (m *MemberService) DeleteAddress(ctx context.Context, addressID string) error {
+	data, err := m.DELETE("/address/" + addressID).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx).Bytes()
+
+	if err != nil {
+		return err
+	}
+
+	var resp Err
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return err
+	}
+
+	if resp.Code > 0 {
+		return resp
+	}
+
+	return nil
+}
+
 type WalletAssetOperation struct {
 	AssetID string `json:"asset_id"`
 	Amount  string `json:"amount"`

@@ -77,6 +77,18 @@ type WalletUserAssetView struct {
 	Chain *WalletAssetView `json:"chain"`
 }
 
+// WithdrawAddressView withdraw address
+type WithdrawAddressView struct {
+	AddressID string `json:"address_id,omitempty"`
+	AssetID   string `json:"asset_id"`
+
+	PublicKey string `json:"public_key,omitempty"`
+	Label     string `json:"label,omitempty"`
+
+	AccountName string `json:"account_name,omitempty"`
+	AccountTag  string `json:"account_tag,omitempty"`
+}
+
 // Snapshot model
 type WalletSnapshotView struct {
 	SnapshotID      string      `json:"snapshot_id"`

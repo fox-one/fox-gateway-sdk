@@ -21,6 +21,8 @@ const (
 func main() {
 	ctx := context.Background()
 
+	// read asset detail
+	const BTC = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	merchantSrv := gateway.NewMerchantClient(api).WithSession(merchantKey, merchantSecret)
 
 	// create member
@@ -49,7 +51,7 @@ func main() {
 	// wallet
 	{
 		srv := merchantSrv.Member(member.ID).Service(exchangeService)
-		srvWithPin := merchantSrv.Member(member.ID).ServiceWithPin(exchangeService, "123456")
+		srvWithPin := merchantSrv.Member(member.ID).ServiceWithPin(exchangeService, "654321")
 
 		// read assets
 		if assets, err := srv.ReadAssets(ctx, 0); err == nil {
@@ -58,8 +60,6 @@ func main() {
 			log.Panicf("read assets failed: %v", err)
 		}
 
-		// read asset detail
-		BTC := "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 		if asset, err := srv.ReadAsset(ctx, BTC); err == nil {
 			log.Infof("btc balance: %s", asset.Balance)
 		} else {
@@ -86,7 +86,6 @@ func main() {
 
 		// withdraw
 		withdraw := &gateway.WalletWithdrawOperation{
-			PublicKey:            "", // withdraw address
 			WalletAssetOperation: op,
 		}
 
@@ -94,6 +93,32 @@ func main() {
 			log.Errorf("withdraw failed: %v", err)
 		} else {
 			log.Infof("snapshot id: %s", snapshot.SnapshotID)
+		}
+
+		{
+			if addrs, err := srv.ReadAddresses(ctx, BTC); err != nil {
+				log.Errorf("read addresses failed: %v", err)
+			} else {
+				log.Infof("read %d addresses", len(addrs))
+			}
+
+			publicKey := "1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX"
+			addr, err := srvWithPin.UpsertAddress(ctx, &gateway.WithdrawAddressView{
+				AssetID:   BTC,
+				PublicKey: publicKey,
+				Label:     "test",
+			})
+			if err != nil {
+				log.Errorf("upsert address failed: %v", err)
+			} else {
+				log.Infof("upsert address: %s", addr.AddressID)
+			}
+
+			if err := srvWithPin.DeleteAddress(ctx, addr.AddressID); err != nil {
+				log.Errorf("delete address failed: %v", err)
+			} else {
+				log.Infof("delete address: %s", addr.AddressID)
+			}
 		}
 	}
 }
