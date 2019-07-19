@@ -207,6 +207,7 @@ type WalletAssetOperation struct {
 type WalletWithdrawOperation struct {
 	WalletAssetOperation
 
+	AddressID   string `json:"address_id"`
 	PublicKey   string `json:"public_key"`
 	AccountName string `json:"account_name"`
 	AccountTag  string `json:"account_tag"`
