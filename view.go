@@ -1,5 +1,9 @@
 package gateway
 
+import (
+	"github.com/shopspring/decimal"
+)
+
 // MemberView member
 type MemberView struct {
 	ID        string `json:"id"`
@@ -66,6 +70,14 @@ type WalletAssetView struct {
 	ChangeBTC string `json:"change_btc"`
 }
 
+// WalletChainView wallet chain view
+type WalletChainView struct {
+	WalletAssetView
+
+	Fee           decimal.Decimal `json:"fee"`
+	Confirmations int             `jons:"confirmations"`
+}
+
 type WalletUserAssetView struct {
 	WalletAssetView
 
@@ -74,7 +86,7 @@ type WalletUserAssetView struct {
 	AccountName string `json:"account_name"`
 	AccountTag  string `json:"account_tag"`
 
-	Chain *WalletAssetView `json:"chain"`
+	Chain *WalletChainView `json:"chain"`
 }
 
 // WithdrawAddressView withdraw address
