@@ -35,3 +35,23 @@ func (m *MemberService) ExchangeOrder(ctx context.Context, amount, price, side, 
 
 	return resp.WalletSnapshotView, nil
 }
+
+func (m *MemberService) CancelExchangeOrder(ctx context.Context, orderID string) error {
+	req := m.DELETE("/order/" + orderID)
+
+	data, err := req.Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
+	if err != nil {
+		return err
+	}
+
+	var resp struct {
+		Err
+	}
+
+	jsoniter.Unmarshal(data, &resp)
+	if resp.Code > 0 {
+		return resp.Err
+	}
+
+	return nil
+}
