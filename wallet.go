@@ -121,6 +121,32 @@ func (m *MemberService) ReadSnapshot(ctx context.Context, id string) (*WalletSna
 	return resp.Snapshot, nil
 }
 
+// ReadPendingDeposits pending deposits
+func (m *MemberService) ReadPendingDeposits(ctx context.Context, chainID, assetID string) ([]*WalletPendingDepositView, error) {
+	result := m.GET("/pending-deposits").
+		P("asset_id", assetID).
+		P("chain_id", chainID).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx)
+
+	data, err := result.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var snapshots []*WalletPendingDepositView
+	if err := jsoniter.Unmarshal(data, &snapshots); err == nil {
+		return snapshots, nil
+	}
+
+	var e Err
+	if err := jsoniter.Unmarshal(data, &e); err == nil && e.Code > 0 {
+		return nil, e
+	}
+	_, status := result.Status()
+	return nil, errors.New(status)
+}
+
 // ReadAddresses fetch user addresses
 func (m *MemberService) ReadAddresses(ctx context.Context, assetID string) ([]*WithdrawAddressView, error) {
 	data, err := m.GET("/addresses").

@@ -123,6 +123,28 @@ type WalletSnapshotView struct {
 	Asset WalletAssetView `json:"asset"`
 }
 
+// WalletPendingDepositView pending deposit
+type WalletPendingDepositView struct {
+	Type string `json:"type"`
+
+	TransactionID   string `json:"transaction_id"`
+	TransactionHash string `json:"transaction_hash"`
+	CreatedAt       int64  `json:"created_at"`
+
+	AssetID       string `json:"asset_id,omitempty"`
+	ChainID       string `json:"chain_id,omitempty"`
+	Amount        string `json:"amount"`
+	Confirmations int    `json:"confirmations"`
+	Threshold     int    `json:"threshold"`
+
+	BrokerID    string `json:"broker_id"`
+	UserID      string `json:"user_id"`
+	Sender      string `json:"sender"`
+	PublicKey   string `json:"public_key"`
+	AccountName string `json:"account_name"`
+	AccountTag  string `json:"account_tag"`
+}
+
 // Exchange
 
 type ExchangeAssetView struct {
