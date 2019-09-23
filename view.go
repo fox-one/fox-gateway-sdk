@@ -145,6 +145,17 @@ type WalletPendingDepositView struct {
 	AccountTag  string `json:"account_tag"`
 }
 
+// ExternalSnapshotView external snapshot
+type ExternalSnapshotView struct {
+	SnapshotID string `json:"snapshot_id"`
+	Source     string `json:"source"`
+	MemberID   string `json:"member_id"`
+	WalletID   string `json:"wallet_id"`
+	AssetID    string `json:"asset_id"`
+	Amount     string `json:"amount"`
+	CreatedAt  int64  `json:"created_at"`
+}
+
 // Exchange
 
 type ExchangeAssetView struct {

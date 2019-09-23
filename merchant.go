@@ -11,34 +11,39 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// MerchantClient merchant client
 type MerchantClient struct {
 	*Client
 	key    string
 	secret string
 }
 
+// Merchant merchant
 func (c *Client) Merchant() *MerchantClient {
 	return &MerchantClient{
 		Client: c.Group("merchant"),
 	}
 }
 
+// NewMerchantClient new client
 func NewMerchantClient(apiBase string) *MerchantClient {
 	return NewClient(apiBase).Merchant()
 }
 
-func (c *MerchantClient) WithSession(key, secret string) *MerchantClient {
+// WithSession session
+func (m *MerchantClient) WithSession(key, secret string) *MerchantClient {
 	return &MerchantClient{
-		Client: c.Client,
+		Client: m.Client,
 		key:    key,
 		secret: secret,
 	}
 }
 
-func (c *MerchantClient) Member(id string) *MemberClient {
-	return c.Client.Member().WithAuth(&merchantMemberAuth{
-		merchantKey:    c.key,
-		merchantSecret: c.secret,
+// Member member
+func (m *MerchantClient) Member(id string) *MemberClient {
+	return m.Client.Member().WithAuth(&merchantMemberAuth{
+		merchantKey:    m.key,
+		merchantSecret: m.secret,
 		memberID:       id,
 	})
 }
@@ -93,6 +98,7 @@ func (m *merchantAuth) Auth(req *httpclient.Request, method, uri string, body []
 	req.AddToken(m.token(method, uri, body))
 }
 
+// Presign pre-sign
 func (m *MerchantClient) Presign(expire time.Duration) *merchantAuth {
 	return &merchantAuth{
 		key:    m.key,
@@ -103,12 +109,14 @@ func (m *MerchantClient) Presign(expire time.Duration) *merchantAuth {
 
 // member
 
+// CreateMemberOutput create member
 type CreateMemberOutput struct {
 	Member  *MemberView         `json:"member,omitempty"`
 	Session *MemberSessionView  `json:"session,omitempty"`
 	Wallets []*MemberWalletView `json:"wallets,omitempty"`
 }
 
+// CreateMember create member
 func (m *MerchantClient) CreateMember(ctx context.Context) (*CreateMemberOutput, error) {
 	data, err := m.POST("/member/new").Auth(m.Presign(time.Minute)).Do(ctx).Bytes()
 	if err != nil {
@@ -132,6 +140,7 @@ func (m *MerchantClient) CreateMember(ctx context.Context) (*CreateMemberOutput,
 	return resp.CreateMemberOutput, nil
 }
 
+// LoginMember login member
 func (m *MerchantClient) LoginMember(ctx context.Context, id string, expire time.Duration) (*MemberView, *MemberSessionView, error) {
 	data, err := m.POST("/member/login").
 		P("id", id).
@@ -186,6 +195,7 @@ func (m *MerchantClient) ClearUserSessions(ctx context.Context, memberID string,
 	return nil
 }
 
+// MemberWallets member wallets
 func (m *MerchantClient) MemberWallets(ctx context.Context, memberID string, service string) ([]*MemberWalletView, error) {
 	result := m.GET("/member/services").
 		P("member_id", memberID).
@@ -212,6 +222,7 @@ func (m *MerchantClient) MemberWallets(ctx context.Context, memberID string, ser
 	return nil, errors.New(status)
 }
 
+// FetchSnapshots fetch snapshots
 func (m *MerchantClient) FetchSnapshots(ctx context.Context, service, assetID, cursor, order string, limit int) ([]*WalletSnapshotView, *Pagination, error) {
 	result := m.GET("/member/snapshots").
 		P("service", service).
@@ -242,4 +253,34 @@ func (m *MerchantClient) FetchSnapshots(ctx context.Context, service, assetID, c
 	}
 
 	return resp.Snapshots, resp.Pagination, nil
+}
+
+// ReadExternalSnapshots external snapshots
+func (m *MerchantClient) ReadExternalSnapshots(ctx context.Context, from, to int64, limit int) ([]*ExternalSnapshotView, error) {
+	result := m.GET("/snapshots/external").
+		P("from", from).
+		P("to", to).
+		P("limit", limit).
+		Auth(m.Presign(time.Minute)).
+		Do(ctx)
+
+	data, err := result.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Err
+		Snapshots []*ExternalSnapshotView `json:"snapshots"`
+	}
+
+	if err := jsoniter.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.Code > 0 {
+		return nil, resp.Err
+	}
+
+	return resp.Snapshots, nil
 }
