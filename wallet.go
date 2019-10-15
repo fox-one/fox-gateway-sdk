@@ -230,13 +230,18 @@ type WalletAssetOperation struct {
 	TraceID string `json:"trace_id"`
 }
 
+// WalletWithdrawOperation withdraw params
 type WalletWithdrawOperation struct {
 	WalletAssetOperation
 
 	AddressID   string `json:"address_id"`
-	PublicKey   string `json:"public_key"`
-	AccountName string `json:"account_name"`
-	AccountTag  string `json:"account_tag"`
+	Destination string `json:"destination,omitempty"`
+	Tag         string `json:"tag,omitempty"`
+
+	// TODO Deprecated
+	PublicKey   string `json:"public_key,omitempty"`
+	AccountName string `json:"account_name,omitempty"`
+	AccountTag  string `json:"account_tag,omitempty"`
 }
 
 // Withdraw 提现
@@ -301,12 +306,12 @@ func (m *MemberService) Transfer(ctx context.Context, op *WalletTransferOperatio
 
 // wallet public
 
-func (c *Client) WithdrawFee(ctx context.Context, assetId string, publicKey string, accountName, accountTag string) (*WalletAssetView, string, error) {
+// WithdrawFee withdraw fee
+func (c *Client) WithdrawFee(ctx context.Context, assetID, destination, tag string) (*WalletAssetView, string, error) {
 	req := c.GET("/wallet/withdraw-fee").
-		Q("asset_id", assetId).
-		Q("public_key", publicKey).
-		Q("account_name", accountName).
-		Q("account_tag", accountTag)
+		Q("asset_id", assetID).
+		Q("destination", destination).
+		Q("tag", tag)
 
 	data, err := req.Do(ctx).Bytes()
 	if err != nil {

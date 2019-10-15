@@ -47,13 +47,14 @@ type MemberWalletView struct {
 
 // wallet
 
+// WalletUserView user
 type WalletUserView struct {
 	ID       string `json:"id"`
 	Fullname string `json:"fullname"`
 	Avatar   string `json:"avatar"`
 }
 
-// Asset asset
+// WalletAssetView asset
 type WalletAssetView struct {
 	AssetID string `json:"asset_id"`
 	ChainID string `json:"chain_id"`
@@ -78,15 +79,20 @@ type WalletChainView struct {
 	Confirmations int             `jons:"confirmations"`
 }
 
+// WalletUserAssetView user asset
 type WalletUserAssetView struct {
 	WalletAssetView
 
 	Balance     string `json:"balance"`
+	Destination string `json:"destination,omitempty"`
+	Tag         string `json:"tag,omitempty"`
+
+	Chain *WalletChainView `json:"chain"`
+
+	// TODO Deprecated
 	PublicKey   string `json:"public_key"`
 	AccountName string `json:"account_name"`
 	AccountTag  string `json:"account_tag"`
-
-	Chain *WalletChainView `json:"chain"`
 }
 
 // WithdrawAddressView withdraw address
@@ -94,14 +100,17 @@ type WithdrawAddressView struct {
 	AddressID string `json:"address_id,omitempty"`
 	AssetID   string `json:"asset_id"`
 
-	PublicKey string `json:"public_key,omitempty"`
-	Label     string `json:"label,omitempty"`
+	Label       string `json:"label,omitempty"`
+	Destination string `json:"destination,omitempty"`
+	Tag         string `json:"tag,omitempty"`
 
+	// TODO Deprecated
+	PublicKey   string `json:"public_key,omitempty"`
 	AccountName string `json:"account_name,omitempty"`
 	AccountTag  string `json:"account_tag,omitempty"`
 }
 
-// Snapshot model
+// WalletSnapshotView snapshot
 type WalletSnapshotView struct {
 	SnapshotID      string      `json:"snapshot_id"`
 	TraceID         string      `json:"trace_id"`
@@ -140,6 +149,10 @@ type WalletPendingDepositView struct {
 	BrokerID    string `json:"broker_id"`
 	UserID      string `json:"user_id"`
 	Sender      string `json:"sender"`
+	Destination string `json:"destination,omitempty"`
+	Tag         string `json:"tag,omitempty"`
+
+	// TODO Deprecated
 	PublicKey   string `json:"public_key"`
 	AccountName string `json:"account_name"`
 	AccountTag  string `json:"account_tag"`
@@ -158,6 +171,7 @@ type ExternalSnapshotView struct {
 
 // Exchange
 
+// ExchangeAssetView exchange asset
 type ExchangeAssetView struct {
 	Symbol    string `json:"symbol,omitempty"`
 	AssetID   string `json:"asset_id,omitempty"`
@@ -168,12 +182,13 @@ type ExchangeAssetView struct {
 	Precision int    `json:"precision,omitempty"`
 }
 
+// ExchangePairView exchange pair
 type ExchangePairView struct {
 	Symbol           string `json:"symbol,omitempty"`
 	Logo             string `json:"logo,omitempty"`
-	BaseAssetId      string `json:"base_asset_id,omitempty"`
+	BaseAssetID      string `json:"base_asset_id,omitempty"`
 	BaseAssetSymbol  string `json:"base_asset,omitempty"`
-	QuoteAssetId     string `json:"quote_asset_id,omitempty"`
+	QuoteAssetID     string `json:"quote_asset_id,omitempty"`
 	QuoteAssetSymbol string `json:"quote_asset,omitempty"`
 	PricePrecision   int    `json:"price_precision,omitempty"`
 	AmountPrecision  int    `json:"amount_precision,omitempty"`
@@ -184,6 +199,7 @@ type ExchangePairView struct {
 	QuoteMaxAmount   string `json:"quote_max_amount,omitempty"`
 }
 
+// Market market
 func (v *ExchangePairView) Market() string {
-	return v.BaseAssetId + "-" + v.QuoteAssetId
+	return v.BaseAssetID + "-" + v.QuoteAssetID
 }
